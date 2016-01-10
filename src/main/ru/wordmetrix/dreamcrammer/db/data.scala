@@ -21,8 +21,6 @@ sealed abstract class OptionData[+A] extends Product with Serializable {
   @inline final def getOrElse[B >: A](default: => B): B =
     if (isEmpty) default else this.get
 
-  @inline final def orNull[A1 >: A](implicit ev: Null <:< A1): A1 = this getOrElse null
-
   @inline final def map[B](f: A => B): OptionData[B] =
     if (isEmpty) NoData else SomeData(f(this.get))
 
