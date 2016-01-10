@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    >
+
+    <EditText android:id="@+id/word_value"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Word or phrase"
+        />
+        
+    <!-- EditText id="@+id/word_frequency"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:numeric="decimal"
+        android:hint="Oberveved frequency of this word"
+        / -->
+        
+    <EditText android:id="@+id/word_ipa"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Pronunciation in IPA"
+        />
+        
+</LinearLayout>

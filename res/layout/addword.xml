@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+>
+
+    <Button 
+        android:textOff="Hide this word"
+        android:textOn="Activate this word"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="This word doesn't exist"
+        android:textSize="35sp"              
+        android:padding="5sp" 
+    />
+
+</LinearLayout>

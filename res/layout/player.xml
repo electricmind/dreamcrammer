@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
+    <ru.wordmetrix.dreamcrammer.OnInterceptTouchEvent android:id="@+id/onintercepttouchevent"
+        android:layout_width="fill_parent" 
+        android:layout_height="fill_parent"
+        >
+        <android.support.v4.widget.DrawerLayout 
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"   
+            android:clickable="true"
+            android:onClick="doSuspendForAwhile"
+            >
+            <android.support.v4.widget.SlidingPaneLayout
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:clickable="true"
+                android:onClick="doSuspendForAwhile"
+                >
+
+                <FrameLayout android:id="@+id/currentword"
+                    android:layout_width="fill_parent" 
+                    android:layout_height="fill_parent"
+                    >
+                     <TextView
+                         android:layout_width="fill_parent"
+                         android:layout_height="wrap_content"
+                         android:text=""
+                         android:gravity="center"
+                         android:textSize="65sp"
+                         />
+
+                </FrameLayout>
+
+                <FrameLayout android:id="@+id/currentpicture"
+                    android:layout_width="fill_parent" 
+                    android:layout_height="fill_parent"
+                    android:clickable="true"
+                    android:onClick="doSuspendForAwhile"
+                    >
+                    <TextView
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:text=""
+                        android:gravity="center"
+                        android:textSize="65sp"
+                        />
+                </FrameLayout>
+            </android.support.v4.widget.SlidingPaneLayout>
+
+
+            <LinearLayout
+                android:layout_height="fill_parent"
+                android:layout_gravity="left"
+                android:orientation="vertical"
+                android:alpha="1"
+                android:background="#222222"
+                android:layout_width="250dp"
+                >
+                <TextView android:id="@+id/history_size"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"  
+                    android:text=""
+                    android:gravity="center"
+                    android:singleLine="true"
+                    android:textSize="45sp"
+                />                           
+                
+                <ListView
+                    android:id="@+id/history"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="35sp"
+                    android:text=""
+                    android:layout_gravity="left"
+                    />
+            </LinearLayout>
+    
+        </android.support.v4.widget.DrawerLayout>
+    </ru.wordmetrix.dreamcrammer.OnInterceptTouchEvent>
+</LinearLayout>
+

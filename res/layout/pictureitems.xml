@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<HorizontalScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="fill_parent"
+        android:gravity="center" 
+    android:fillViewport="true"
+    >
+ 
+    <LinearLayout
+        android:id="@+id/picturevalues"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:gravity="center" 
+        android:orientation="horizontal" 
+        />          
+ 
+
+</HorizontalScrollView>

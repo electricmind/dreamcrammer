@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <android.support.v4.widget.DrawerLayout
+        android:id="@+id/queuesdrawer"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" >
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:orientation="horizontal" >
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:onClick="onUnknown"
+                android:text="++" />
+
+            <ru.wordmetrix.widget.VerticalSlidePane
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1.0"
+                android:orientation="vertical" >
+
+                <android.support.v4.widget.SlidingPaneLayout
+                    android:id="@+id/answerslide"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:layout_weight="0.8" >
+
+                    <FrameLayout
+                        android:id="@+id/answer"
+                        android:layout_width="fill_parent"
+                        android:layout_height="fill_parent" >
+
+                        <TextView
+                            android:layout_width="fill_parent"
+                            android:layout_height="fill_parent"
+                            android:gravity="center"
+                            android:text="Answers still are not here: So miserable, huh?"
+                            android:textAlignment="center"
+                            android:textSize="25sp" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="fill_parent"
+                        android:layout_height="fill_parent"
+                        android:orientation="horizontal" >
+
+                        <TableLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="fill_parent"
+                            android:background="#555555"
+                            android:clickable="true"
+                            android:drawableLeft="#666666"
+                            android:onClick="onClickAnswer"
+                            android:padding="3px" >
+
+                            <TableRow>
+
+                                <TextView
+                                    android:drawableLeft="#666666"
+                                    android:gravity="left"
+                                    android:lines="1"
+                                    android:padding="3px"
+                                    android:text="Grade" />
+
+                                <TextView
+                                    android:id="@+id/grade"
+                                    android:gravity="right"
+                                    android:lines="1"
+                                    android:padding="3px"
+                                    android:text="5" />
+                            </TableRow>
+
+                            <TableRow>
+
+                                <TextView
+                                    android:drawableLeft="#666666"
+                                    android:gravity="left"
+                                    android:lines="1"
+                                    android:padding="3px"
+                                    android:text="Unique" />
+
+                                <TextView
+                                    android:id="@+id/unique"
+                                    android:gravity="right"
+                                    android:lines="1"
+                                    android:padding="3px"
+                                    android:text="5" />
+                            </TableRow>
+
+                            <TableRow>
+
+                                <TextView
+                                    android:background="#666666"
+                                    android:drawableLeft="#666666"
+                                    android:gravity="left"
+                                    android:lines="1"
+                                    android:padding="3px"
+                                    android:text="Words" />
+
+                                <TextView
+                                    android:id="@+id/size"
+                                    android:background="#666666"
+                                    android:gravity="right"
+                                    android:lines="1"
+                                    android:padding="3px"
+                                    android:text="100" />
+                            </TableRow>
+
+                            <TableRow>
+
+                                <TextView
+                                    android:background="#666666"
+                                    android:drawableLeft="#666666"
+                                    android:gravity="left"
+                                    android:lines="1"
+                                    android:padding="3px"
+                                    android:text="Whole" />
+
+                                <TextView
+                                    android:id="@+id/whole_size"
+                                    android:background="#666666"
+                                    android:gravity="right"
+                                    android:lines="1"
+                                    android:padding="3px"
+                                    android:text="100" />
+                            </TableRow>
+
+                            <TableRow>
+
+                                <TextView
+                                    android:background="#666666"
+                                    android:drawableLeft="#666666"
+                                    android:gravity="left"
+                                    android:lines="1"
+                                    android:padding="3px"
+                                    android:text="In this session" />
+
+                                <TextView
+                                    android:id="@+id/session"
+                                    android:background="#666666"
+                                    android:gravity="right"
+                                    android:lines="1"
+                                    android:padding="3px"
+                                    android:text="100" />
+                            </TableRow>
+
+                            <TableRow>
+
+                                <TextView
+                                    android:background="#666666"
+                                    android:drawableLeft="#666666"
+                                    android:gravity="left"
+                                    android:lines="1"
+                                    android:padding="3px"
+                                    android:text="Session endurance" />
+
+                                <TextView
+                                    android:id="@+id/endurance"
+                                    android:background="#666666"
+                                    android:gravity="right"
+                                    android:lines="1"
+                                    android:padding="3px"
+                                    android:text="100" />
+                            </TableRow>
+
+                            <TableRow>
+
+                                <TextView
+                                    android:background="#666666"
+                                    android:drawableBottom="#666666"
+                                    android:drawableLeft="#666666"
+                                    android:gravity="left"
+                                    android:lines="1"
+                                    android:padding="3px"
+                                    android:text="Weight" />
+
+                                <TextView
+                                    android:id="@+id/weight"
+                                    android:background="#666666"
+                                    android:drawableBottom="#666666"
+                                    android:gravity="right"
+                                    android:lines="1"
+                                    android:padding="3px"
+                                    android:text="100" />
+                            </TableRow>
+
+                            <TableRow>
+
+                                <TextView
+                                    android:background="#666666"
+                                    android:drawableBottom="#666666"
+                                    android:drawableLeft="#666666"
+                                    android:gravity="left"
+                                    android:lines="1"
+                                    android:padding="3px"
+                                    android:text="Number" />
+
+                                <TextView
+                                    android:id="@+id/number"
+                                    android:background="#666666"
+                                    android:drawableBottom="#666666"
+                                    android:gravity="right"
+                                    android:lines="1"
+                                    android:padding="3px"
+                                    android:text="100" />
+                            </TableRow>
+                        </TableLayout>
+
+                        <TextView
+                            android:layout_width="fill_parent"
+                            android:layout_height="fill_parent"
+                            android:layout_weight="1.0"
+                            android:clickable="true"
+                            android:gravity="center"
+                            android:onClick="onClickAnswer"
+                            android:text="Answers are here - just click to enjoy"
+                            android:textAlignment="center"
+                            android:textSize="25sp" />
+
+                        <Button
+                            android:layout_width="wrap_content"
+                            android:layout_height="fill_parent"
+                            android:onClick="onPronounce"
+                            android:text="Pronounce" />
+                    </LinearLayout>
+                </android.support.v4.widget.SlidingPaneLayout>
+
+                <FrameLayout
+                    android:id="@+id/question"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:layout_weight="0.2" >
+
+                    <TextView
+                        android:layout_width="fill_parent"
+                        android:layout_height="fill_parent"
+                        android:text="Question" />
+                </FrameLayout>
+            </ru.wordmetrix.widget.VerticalSlidePane>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:orientation="vertical" >
+
+                <ToggleButton
+                    android:id="@+id/toggleanswer"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="onToggleAnswer"
+                    android:text="Explain"
+                    android:textOff="Explain"
+                    android:textOn="Hide"
+                    android:visibility="gone" />
+
+                <ToggleButton
+                    android:id="@+id/togglequeues"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:onClick="onToggleMenu"
+                    android:text="Hide Menu"
+                    android:textOff="Show"
+                    android:textOn="Hide"
+                    android:visibility="gone" />
+
+                <Button
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:layout_weight="1.0"
+                    android:onClick="onKnown"
+                    android:text="--" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/exercises"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:layout_gravity="left"
+            android:orientation="vertical" >
+
+            <Button
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onWordNDescriptions"
+                android:text="Word -> Description" />
+
+            <Button
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onDescriptionNWords"
+                android:text="Description -> Word" />
+
+            <Button
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onWordNPictures"
+                android:text="Word -> Picture" />
+
+            <Button
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onPictureNWords"
+                android:text="Picture -> Word" />
+
+            <Button
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onWordNPhrases"
+                android:text="Word -> Phrase" />
+
+            <Button
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onPhraseNWords"
+                android:text="Phrase -> Word" />
+
+            <Button
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onPrepositions"
+                android:text="Prepositions" />
+
+            <Button
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onIdioms"
+                android:text="Idioms" />
+
+            <ToggleButton
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="Simple English"
+                android:textOff="Any English"
+                android:textOn="Simple English" />
+
+            <ToggleButton
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:text="Basic Lexicon"
+                android:textOff="Any Lexicon"
+                android:textOn="Basic Lexicon" />
+        </LinearLayout>
+    </android.support.v4.widget.DrawerLayout>
+
+</LinearLayout>

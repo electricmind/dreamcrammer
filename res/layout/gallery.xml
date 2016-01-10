@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
+    
+    <android.support.v4.widget.DrawerLayout android:id="@+id/drawer" 
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"   
+    >
+        <LinearLayout android:orientation="vertical"
+            android:layout_width="fill_parent"  
+            android:layout_height="fill_parent"
+        >
+            <LinearLayout android:orientation="vertical"
+                 android:layout_width="fill_parent"
+                 android:layout_weight="1.0" 
+                 android:layout_height="fill_parent"
+            >
+
+            <include
+                layout="@layout/picturewhole" 
+             />
+
+            </LinearLayout>
+
+            <Button 
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:text="Make it first in queue"
+                 android:onClick="doFirst"
+            />
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/searchview"
+             android:orientation="vertical"
+             android:alpha="1"
+             android:background="#222222"
+             android:layout_width="250dp"
+             android:layout_height="fill_parent"
+             android:layout_gravity="left"
+        >
+             <ListView android:id="@+id/fields"
+                  android:layout_width="wrap_content"
+                  android:layout_height="fill_parent"
+                  android:text="Search field is gonna be there, soon"                  
+             />
+       
+             <Button android:id="@+id/addbutton"
+                  android:layout_width="wrap_content"
+                  android:layout_height="fill_parent"
+                  android:text="Add this picture"  
+                  android:onClick="doAddField"
+             />
+
+        </LinearLayout>
+
+    </android.support.v4.widget.DrawerLayout>
+</LinearLayout>
+

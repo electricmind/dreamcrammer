@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v4.widget.SlidingPaneLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
+
+    <include
+        layout="@layout/wordview" 
+    />
+
+    <FrameLayout android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        >
+
+        <TextView
+            android:id="@+id/word_value_big"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:text="Have not filled appropriately"
+            android:gravity="center"
+            android:textAlignment="center"
+            android:textSize="65sp"
+            android:padding="5sp"
+            />          
+
+    </FrameLayout>
+</android.support.v4.widget.SlidingPaneLayout>

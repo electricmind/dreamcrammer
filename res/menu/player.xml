@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:id="@+id/stop"
+          android:showAsAction="ifRoom"
+          android:icon="@drawable/questionaire"
+          android:title="Start questionaire"
+    /> 
+
+    <item android:id="@+id/exit"
+          android:showAsAction="ifRoom"
+          android:icon="@drawable/questionaire"
+          android:title="Start questionaire"
+    /> 
+
+    <item android:id="@+id/pauseresume"
+          android:showAsAction="ifRoom"
+          android:icon="@drawable/pause"
+          android:title="Pause/Resume"
+    /> 
+
+    <item android:id="@+id/reload"
+          android:icon="@drawable/reload"
+          android:showAsAction="ifRoom"
+          android:title="Reload data" />
+
+    <item android:id="@+id/restart"
+          android:icon="@drawable/restart"
+          android:showAsAction="ifRoom"
+          android:title="Restart download tasks" />
+
+    <item android:id="@+id/pool"
+          android:icon="@drawable/restart"
+          android:showAsAction="ifRoom"
+          android:title="Pool of tasks" />
+
+
+
+    <item android:id="@+id/help"
+          android:icon="@drawable/help"
+          android:showAsAction="ifRoom"
+          android:title="help" />
+
+
+    <item android:id="@+id/settings"
+          android:icon="@drawable/settings"
+          android:title="settings"
+          android:showAsAction="ifRoom"
+    /> 
+
+
+</menu>

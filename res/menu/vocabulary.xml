@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:yourapp="http://schemas.android.com/apk/res-auto"
+>
+
+    <item android:id="@+id/search"
+          android:icon="@drawable/search"
+          android:title="Search"
+          android:showAsAction="ifRoom|collapseActionView"
+          android:actionViewClass="android.widget.SearchView"
+    /> 
+
+
+    <item android:id="@+id/edit"
+          android:icon="@drawable/edit"
+          android:showAsAction="ifRoom"
+          android:title="Edit" />
+
+
+    <item android:id="@+id/play"
+          android:showAsAction="ifRoom"
+          android:icon="@drawable/play"
+          android:title="Play a lot of melody"
+    /> 
+
+    <item android:id="@+id/reload"
+          android:icon="@drawable/reload"
+          android:showAsAction="ifRoom"
+          android:title="Reload View" />
+
+    <item android:id="@+id/delete"
+          android:icon="@drawable/delete"
+          android:showAsAction="ifRoom"
+          android:title="Delete Item" />
+
+    <item android:id="@+id/addpicture"
+          android:showAsAction="ifRoom"
+          android:icon="@drawable/takepicture"
+          android:title="Take picture"
+    /> 
+    
+    <item android:icon="@drawable/add"
+          android:title="Add ...">
+
+          <menu>
+                <item android:id="@+id/addescription"
+                      android:icon="@drawable/edit"
+                      android:title="Add description" />
+
+                <item android:id="@+id/addphrase"
+                      android:icon="@drawable/edit"
+                      android:title="Add phrase" />
+          </menu>
+    </item>
+
+    <item android:icon="@drawable/download"
+          android:title="Download ...">
+
+          <menu>
+                <item android:id="@+id/downloadpicture"
+                      android:icon="@drawable/edit"
+                      android:title="Download picture" />
+
+                <item android:id="@+id/downloadtrack"
+                      android:icon="@drawable/edit"
+                      android:title="Download track" />
+
+                <item android:id="@+id/downloadpronunciation"
+                      android:icon="@drawable/edit"
+                      android:title="Download pronunciation" />
+          </menu>
+    </item>
+
+    <item android:id="@+id/restart"
+          android:icon="@drawable/restart"
+          android:showAsAction="ifRoom"
+          android:title="Restart download tasks" />
+
+    <item android:id="@+id/pool"
+          android:icon="@drawable/restart"
+          android:showAsAction="ifRoom"
+          android:title="Pool of tasks" />
+
+
+
+    <item android:id="@+id/help"
+          android:icon="@drawable/help"
+          android:showAsAction="ifRoom"
+          android:title="help" />
+
+
+    <item android:id="@+id/settings"
+          android:icon="@drawable/settings"
+          android:title="settings"
+          android:showAsAction="ifRoom"
+    /> 
+
+
+</menu>

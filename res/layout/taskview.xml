@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    >
+    
+<!--       android:layout_width="@dimen/icon_size"
+       android:layout_height="@dimen/icon_size" -->
+
+    <ProgressBar
+       android:id="@+id/progressbar"
+       android:layout_gravity="center"
+       android:visibility="visible"
+       android:layout_width="fill_parent"
+       style="@android:style/Widget.ProgressBar.Horizontal"
+       android:layout_height="5dp"
+       />
+        
+    <include
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1.0"
+        layout="@layout/taskitem" 
+    />
+     
+
+    <TableLayout
+       android:layout_width="fill_parent"
+       android:layout_height="wrap_content" 
+       android:padding="3px"
+       android:drawableLeft="#666666"
+       android:background="#555555"
+       >
+
+       <TableRow>
+         <TextView
+           android:text="Started:"
+           android:gravity="left"
+        android:textSize="20sp"
+           android:padding="3px"
+           android:lines="1"
+           android:drawableLeft="#666666"
+           />
+
+         <TextView
+           android:id="@+id/task_date"
+           android:text="5"
+        android:textSize="20sp"
+           android:gravity="right"
+           android:padding="3px"
+           android:lines="1"
+           />
+       </TableRow>
+
+       <TableRow>
+         <TextView
+           android:text="Last Attempt:"
+           android:gravity="left"
+        android:textSize="20sp"
+           android:padding="3px"
+           android:lines="1"
+           android:drawableLeft="#666666"
+           />
+
+         <TextView
+           android:id="@+id/task_last"
+           android:text="5"
+        android:textSize="20sp"
+           android:gravity="right"
+           android:padding="3px"
+           android:lines="1"
+           />
+       </TableRow>
+
+     </TableLayout>
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        >
+
+        <Button
+            android:id="@+id/abort"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Abort"
+            />
+
+        <Button
+            android:id="@+id/suspend"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Suspend"
+            />
+
+        <Button
+            android:id="@+id/resume"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Resume"
+            />
+
+        <Button
+            android:id="@+id/enter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="right"
+            android:text="Enter"
+            />
+
+
+    </LinearLayout>
+
+
+</LinearLayout>
