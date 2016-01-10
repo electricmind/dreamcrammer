@@ -1,3 +1,3 @@
 addSbtPlugin("com.hanhuy.sbt" % "android-sdk-plugin" % "1.5.13")
 
-libraryDependencies += "net.sf.proguard" % "proguard-base" % "5.2.1"
+libraryDependencies += "net.sf.proguard" % "proguard-base" % "4.8"
