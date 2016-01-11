@@ -33,7 +33,8 @@
                 android:padding="5sp"
                 android:text=""
                 android:textAlignment="center"
-                android:textSize="25sp" />
+                android:textSize="25sp"
+                android:textAllCaps="false"/>
 
             <Button
                 android:id="@+id/word_track"
@@ -43,7 +44,8 @@
                 android:padding="5sp"
                 android:text="play"
                 android:textAlignment="center"
-                android:textSize="25sp" />
+                android:textSize="25sp"
+                android:textAllCaps="false"/>
         </LinearLayout>
     </LinearLayout>
 

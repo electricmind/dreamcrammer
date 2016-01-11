@@ -8,19 +8,21 @@ abstract class Pronunciation {
 }
 
 object PronunciationWiktionary extends Pronunciation {
-    def apply(url : String) : Option[String] = ("http://en.wiktionary.org/wiki/%s".format(url.replace(" ","%20")) :+: Page("""<span\s+class="IPA"[^>]*>/([^/]*)/</span>""".r, x=>x.subgroups(0)))
+    def apply(url : String) : Option[String] = ("https://en.wiktionary.org/wiki/%s".format(url.replace(" ","%20")) :+: Page("""<span\s+class="IPA"[^>]*>/([^/]*)/</span>""".r, x=>x.subgroups(0)))
 }
 
 
 object PronunciationDictionary extends Pronunciation {
     def apply(url : String) : Option[String] = {
-        ("http://dictionary.reference.com/browse/%s".format(url.replace(" ","%20")) :+: Page("""<span\s+class="prondelim">/</span><span\s+class="pron">(.*)</span><span\s+class="prondelim">/</span>""".r, x=>x.subgroups(0))) match {
+        ("http://dictionary.reference.com/browse/%s".format(url.replace(" ","%20")) :+: Page("""<span\s+class="dbox-pron">([^<]*)</span>""".r, x=>x.subgroups(0))) match {
              case Some(s) => {
                 val s1 = s.split("<span[^>]*>[^<]*</span[^>]*>").mkString("")
                 //println("=====>" + s + "   |   " + s1)
                 Some("<[^>]+>[^<]+<[^>]+>|<[^>]+/>".r.replaceAllIn(s1,""))
              }
-             case None => None
+             case None =>
+               println("""ssssss""")
+               None
         }
     }
 

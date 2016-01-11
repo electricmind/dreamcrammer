@@ -9,7 +9,8 @@ abstract class Resource
 
 class Page(regex : Regex, select : Regex.Match => String) extends Resource {
     def :+: (url : String) : Option[String] = suck(url) match {
-        case Some(x) => regex.findFirstMatchIn(x) match {
+        case Some(x) =>
+          regex.findFirstMatchIn(x) match {
             case Some(x) => Some(select(x))
             case None => None
         }
