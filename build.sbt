@@ -63,7 +63,7 @@ buildToolsVersion := Some("21.0.0")
 
 libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-library" % "2.10.2",
-  "com.android.support" % "support-v4" % "19.0.0"
+  "com.android.support" % "support-v4" % "20.0.+"
 )
 
 // without this, @Config throws an exception,

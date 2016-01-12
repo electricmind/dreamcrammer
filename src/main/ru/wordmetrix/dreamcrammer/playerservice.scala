@@ -1,12 +1,16 @@
 package ru.wordmetrix.dreamcrammer
 
+import android.graphics.{BitmapFactory, Bitmap}
+import android.support.v4.app.{NotificationManagerCompat, NotificationCompat}
+import android.support.v4.app.NotificationCompat.{BigPictureStyle, WearableExtender}
+
 import scala.annotation.tailrec
-import scala.util.Random
+import scala.util.{Try, Random}
 import java.io._
 
 import android.content.Intent
 import android.media.{MediaPlayer, AudioManager}
-import android.app.{IntentService, Service}
+import android.app.{PendingIntent, IntentService, Service}
 import android.widget.Toast
 import android.os.{Binder, IBinder, AsyncTask, Handler, HandlerThread, Process, Message}
 
@@ -40,7 +44,7 @@ class PlayerService extends Service with PlayerBase//IntentService("DictLearnSer
   def status() : (Boolean, Boolean) = (stop, suspended)
 
   def pause() : Unit = {
-      suspended = true    
+      suspended = true
   }
 
   def resume() : Unit = {
@@ -62,6 +66,47 @@ class PlayerService extends Service with PlayerBase//IntentService("DictLearnSer
 
   override
   def onCreate() : Unit = {
+
+    val playerPendingIntent: PendingIntent = PendingIntent.getActivity(
+      PlayerService.this,
+      0,
+      new Intent(PlayerService.this, classOf[Player]) {
+        //putExtra("word_ids", queryPlayerIds())
+      },
+      0)
+
+    val notificationBuilder: NotificationCompat.Builder =
+      new NotificationCompat.Builder(PlayerService.this)
+        .setSmallIcon(R.drawable.play)
+        .setContentTitle("Player")
+        .setContentText("Start player")
+        .setStyle(new NotificationCompat.InboxStyle()
+//          .addLine("Alex Faaborg   Check this out")
+//          .addLine("Jeff Chang   Launch Party")
+//          .setSummaryText("johndoe@gmail.com")
+        )
+        .setGroup("wordnotification")
+        .setOngoing(true)
+        .setPriority(NotificationCompat.PRIORITY_MAX)
+        .setGroupSummary(true)
+        //setContentIntent(playerPendingIntent).
+        .extend(
+          new WearableExtender()
+            .addAction(
+              new NotificationCompat.Action.Builder(
+                 R.drawable.play,
+                 s"""Start Player""",
+                 playerPendingIntent).build())
+            .addPage(
+                new NotificationCompat.Builder(PlayerService.this)
+                  .setStyle(
+                     new NotificationCompat.BigTextStyle()
+                        .setBigContentTitle("dasdasd")
+                        .bigText("sadsa"))
+                        .build()))
+
+    notificationManager.notify(notifyId.next(), notificationBuilder.build())
+
     servicehandler = Some(new Handler (new HandlerThread("ServiceStartArguments",  Process.THREAD_PRIORITY_BACKGROUND) { start() }.getLooper()) {
 
         @tailrec
@@ -90,6 +135,7 @@ class PlayerService extends Service with PlayerBase//IntentService("DictLearnSer
                          case Stream() => None
                          case xs => Some(xs(scala.util.Random.nextInt(xs.size)))
                      }
+
                      case None => None
                 }
             }
@@ -99,7 +145,7 @@ class PlayerService extends Service with PlayerBase//IntentService("DictLearnSer
             def apply(w1 : Word) = query("select max(hmm1_frequency) from hmm1 where hmm1_word1_id = ?","select hmm1_emit_id,hmm1_frequency from hmm1 where hmm1_frequency > abs(random()) % ? and hmm1_word1_id=?",w1.id,1)
 
             def apply(w1 : Word, w2 : Word) = query("select max(hmm2_frequency) from hmm2 where hmm2_word1_id = 3 and hmm2_word2_id=4", "select hmm2_emit_id,hmm2_frequency from hmm2 where hmm2_frequency > abs(random()) % 2 and hmm2_word1_id=3 and hmm2_word2_id=4 order by hmm2_frequency", w1.id, w2.id)
-        } 
+        }
 
 
         override
@@ -108,9 +154,6 @@ class PlayerService extends Service with PlayerBase//IntentService("DictLearnSer
             suspended = false
 
             lock.synchronized {
-                //val (x1 :: x2 :: _) = msg.obj.asInstanceOf[List[Word]]
-                //scanhmm2(x1,x2)
-
                 scan(scala.util.Random.shuffle(msg.obj.asInstanceOf[List[Word]]))(word => {
                     handler.post(new Runnable {
                         def run() : Unit = callbacks.map(_(word.id))
@@ -123,9 +166,74 @@ class PlayerService extends Service with PlayerBase//IntentService("DictLearnSer
                     history.add(word.id)
                     history_size = history_size + 1
 
+                    val vocabularyPendingIntent: PendingIntent = PendingIntent.getActivity(
+                      PlayerService.this,
+                      word.id,
+                      new Intent(PlayerService.this, classOf[Vocabulary]) {
+                        putExtra("word_id", word.id)
+                      },
+                      0)
+
+                    val stopPendingIntent: PendingIntent = PendingIntent.getService(
+                      PlayerService.this,
+                      0,
+                      new Intent(PlayerService.this, classOf[PlayerService]) {
+                        putExtra("doStop", true)
+                      },
+                      0)
+
+                    def bitmap = word.pictures.view.take(0).flatMap(_.bodyOption).flatMap(body => Try(
+                      Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(body, 0, body.size), 256, 256, true)).toOption)
+
+                    val notificationBuilder: NotificationCompat.Builder =
+                      new NotificationCompat.Builder(PlayerService.this)
+                        .setSmallIcon(R.drawable.play)
+                        .setContentTitle(word.value)
+                        .setContentText(word.ipa getOrElse word.descriptions.mkString("\n"))
+                        .setPriority(NotificationCompat.PRIORITY_MAX)
+                        .setGroup("wordnotification")
+                        //setAutoCancel(true).
+                        .setContentIntent(vocabularyPendingIntent)
+                        //setGroupSummary(true).
+                        .extend(
+                           bitmap.foldLeft(new WearableExtender()
+                             .addAction(
+                               new NotificationCompat.Action.Builder(
+                                 R.drawable.lookat,
+                                 s"""open ${word.value}""",
+                                 vocabularyPendingIntent).build())) {
+                             case (extender, bitmap) =>
+                               extender.addPage(
+                                 new NotificationCompat.Builder(PlayerService.this)
+                                   .setStyle(
+                                     new BigPictureStyle().bigPicture(bitmap))
+                                   .extend(new WearableExtender().setHintShowBackgroundOnly(true))
+                                   .build())}
+                             .addAction(
+                               new NotificationCompat.Action.Builder(
+                                 R.drawable.exit,
+                                 s"""Stop player""",
+                                 stopPendingIntent).build())
+                             .addPage(
+                               new NotificationCompat.Builder(PlayerService.this)
+                                 .setStyle(
+                                   new NotificationCompat.BigTextStyle()
+                                     .setBigContentTitle(word.value)
+                                     .bigText(word.descriptions.map(_.value).mkString("\n"))
+                                     .bigText(word.phrases.map(_.value).mkString("\n")))
+                                 .build()))
+
+                    notificationManager.notify(word.id, notificationBuilder.build())
+
+                    handler.postDelayed(new Runnable() {
+                      def run() {
+                         notificationManager.cancel(word.id)
+                      }
+                    }, 40000)
+
                     Thread.sleep(500)
                     play(word)
-                    Thread.sleep(2000) 
+                    Thread.sleep(2000)
                     play(word)
                     word
                 })
@@ -136,9 +244,15 @@ class PlayerService extends Service with PlayerBase//IntentService("DictLearnSer
     })
   }
 
+  lazy val notificationManager: NotificationManagerCompat = NotificationManagerCompat.from(PlayerService.this)
+
+  lazy val notifyId = Iterator.from(Random.nextInt / 2)
+
   override
   def onStartCommand(intent : Intent, flags : Int, startId : Int) : Int = {
-      if (stop) {
+      if (intent.getBooleanExtra("doStop", false)) {
+        stop = true
+      } else if (stop) {
           Toast.makeText(this, "Service has started", Toast.LENGTH_SHORT).show()
           servicehandler match {
               case None => {}
@@ -149,7 +263,7 @@ class PlayerService extends Service with PlayerBase//IntentService("DictLearnSer
                   msg.obj = intent.getIntArrayExtra("word_ids").toList.map(new Word(_)(db))
                   servicehandler.sendMessage(msg)
               }
-           }      
+           }
       } else {
           Toast.makeText(this, "Pronounciation has already started playing, new intention ignored", Toast.LENGTH_SHORT).show()
       }
@@ -158,6 +272,6 @@ class PlayerService extends Service with PlayerBase//IntentService("DictLearnSer
 
   override
   def onDestroy() : Unit = {
-    Toast.makeText(this, "Service has done", Toast.LENGTH_SHORT).show(); 
+    Toast.makeText(this, "Service has done", Toast.LENGTH_SHORT).show();
   }
 }
