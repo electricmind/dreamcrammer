@@ -1,17 +1,22 @@
 package ru.wordmetrix.dreamcrammer
 
-import android.app.Activity
+import android.app.{PendingIntent, Activity, SearchManager}
+import android.graphics.{BitmapFactory, Bitmap}
 import android.os.{ Bundle }
+import android.support.v4.app.{NotificationManagerCompat, NotificationCompat}
+import android.support.v4.app.NotificationCompat.{BigPictureStyle, WearableExtender}
 import android.view.ViewGroup
+import ru.wordmetrix.dreamcrammer.Player
 import ru.wordmetrix.dreamcrammer.db._
 import ru.wordmetrix._
 import android.content.Context
-import android.app.SearchManager
 import android.view.{ View, LayoutInflater }
 import android.widget.{ ArrayAdapter, TextView, SearchView, ListView }
 import android.content.{ Intent, IntentFilter, BroadcastReceiver }
 import android.support.v4.widget.DrawerLayout
 import android.support.v4.content.LocalBroadcastManager
+
+import scala.util.Try
 
 object IDs {
     val id = Iterator.iterate(1)(x => x + 1)
@@ -148,6 +153,7 @@ class Vocabulary
         log("Resume Vocabulary")
         super.onResume()
         LocalBroadcastManager.getInstance(this).registerReceiver(broadcastreceiver, new IntentFilter(Task.Message.Reload.toString))
+
     }
 
     lazy val broadcastreceiver = new BroadcastReceiver() {

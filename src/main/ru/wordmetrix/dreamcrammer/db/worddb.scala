@@ -20,6 +20,8 @@ object Word {
     }
 
     def queryOrCreate(value: String)(implicit db: DB) = query(value) getOrElse new Word(value)
+
+    def unapply(id: Int)(implicit db: DB): Option[Word] = Some(new Word(id))
 }
 
 class Word(id: Int)(implicit val db: DB) extends Field(id) {

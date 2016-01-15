@@ -6,7 +6,7 @@
  
    <Button
        android:id="@+id/stop"
-       android:text="Stop"
+       android:text="Hide"
        android:layout_width="wrap_content"
        android:layout_height="wrap_content"
        android:onClick="doStop"
