@@ -86,6 +86,19 @@ class PlayerService
   //lazy val convertors =  new Convertors()(db)
   //import convertors._
 
+  def queryPlayerIds() = db.query(
+    """select distinct word_id,word_value
+      | from picture_word_queue
+      |   join picture using(picture_id)
+      |   join word_picture using(picture_id)
+      | join word using(word_id)
+      | where not word_is_seen
+      |   and word_track is not null
+      |   and not word_value like "% %"
+      |   and length(word_value) > 3
+      | order by queue_number
+      | limit 2000
+    """.stripMargin, x => x.columnInt(0)).toArray
 
   def mainNotificationBuilder(isResume: Boolean) = {
     var ids = 12 //Iterator.from(12)
@@ -104,11 +117,10 @@ class PlayerService
 
 
     object PlayerServiceIntentMessage extends PlayerServiceIntent {
-      import scala.collection.JavaConversions._
       def apply(message: PlayerServiceMessage) = message match {
         case PlayerServiceMessageStart =>
           activity(new Intent(PlayerService.this, classOf[Player]) {
-            putExtra("word_ids", Array() ) //Array[java.lang.Integer]()
+            putExtra("word_ids", Array[Int]() ) //Array[java.lang.Integer]()
           })
         case message =>
           service(intent(message))
@@ -127,6 +139,7 @@ class PlayerService
 //        )
 //        .setStyle(new NotificationCompat.BigTextStyle().bigText("The thing plays flashcards"))
         .setGroup("wordnotification")
+        .setNumber(0)
         .setOngoing(true)
         .setPriority(NotificationCompat.PRIORITY_MAX)
         .setGroupSummary(true)
@@ -295,6 +308,9 @@ class PlayerService
 
   override
   def onStartCommand(intent: Intent, flags: Int, startId: Int): Int = {
+
+    log(s"mess ${intent.getSerializableExtra("message")}")
+    log(s"word_ids ${intent.getIntArrayExtra("word_ids")}")
     Option(intent.getSerializableExtra("message")) match {
       case Some(PlayerServiceMessagePause) =>
         pause()
@@ -312,8 +328,8 @@ class PlayerService
           case Some(servicehandler) =>
             val msg: Message = servicehandler.obtainMessage();
             msg.arg1 = startId
-            // ticker: application failed in this place with null-exception
-            msg.obj = intent.getIntArrayExtra("word_ids").toList.map(new Word(_)(db))
+            msg.obj = (intent.getIntArrayExtra("word_ids").toList.view ++ queryPlayerIds().toList.view).take(2000).map(new Word(_)(db)).force
+
             servicehandler.sendMessage(msg)
         }
       case _ =>
