@@ -89,7 +89,8 @@
             android:exported="true">
         </activity> 
         
-        <service android:name=".PlayerService" />
+        <service android:name=".PlayerService"
+                android:stopWithTask="false"/>
         <service android:name=".TaskService" />
         
     </application>
