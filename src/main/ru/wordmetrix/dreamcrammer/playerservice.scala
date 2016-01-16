@@ -139,12 +139,6 @@ class PlayerService
         .setSmallIcon(R.drawable.play)
         .setContentTitle("English Words")
         .setContentText(s"The thing plays flashcards, $history_size messages has played")
-//        .setStyle(new NotificationCompat.InboxStyle()
-//          .addLine("Alex Faaborg   Check this out")
-//          .addLine("Jeff Chang   Launch Party")
-//          .setSummaryText("johndoe@gmail.com")
-//        )
-//        .setStyle(new NotificationCompat.BigTextStyle().bigText("The thing plays flashcards"))
         .setGroup("wordnotification")
         .setNumber(0)
         .setOngoing(true)
@@ -264,9 +258,10 @@ class PlayerService
                 .setContentText(word.ipa getOrElse word.descriptions.mkString("\n"))
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setGroup("wordnotification")
+                .setAutoCancel(true)
                 .setContentIntent(vocabularyPendingIntent)
                 .extend{
-                  val extender =  new WearableExtender()
+                  new WearableExtender()
                     .addAction(
                       new NotificationCompat.Action.Builder(
                         R.drawable.lookat,
@@ -274,25 +269,9 @@ class PlayerService
                         viewPendingIntent).build())
                     .addAction(
                       new NotificationCompat.Action.Builder(
-                        R.drawable.lookat,
-                        s"""open ${word.value}""",
-                        vocabularyPendingIntent).build())
-
-                  val extenderPhrases = (word.descriptions.map(_.value) ++ word.phrases.map(_.value)).foldLeft(extender){
-                    case (extender, phrase) =>
-                      extender.addPage(
-                        new NotificationCompat.Builder(PlayerService.this)
-                          .setContentTitle(word.value)
-                          .setContentText("phrase:")
-                          .setStyle(
-                            new NotificationCompat.BigTextStyle().bigText(phrase))
-                          .build())}
-
-                  extenderPhrases.addAction(
-                    new NotificationCompat.Action.Builder(
-                      R.drawable.exit,
-                      s"""Stop player""",
-                      stopPendingIntent).build())}
+                        R.drawable.exit,
+                        s"""Stop player""",
+                        stopPendingIntent).build())}
 
 
             notificationManager.notify(word.id, notificationBuilder.build())
@@ -335,6 +314,7 @@ class PlayerService
         exit()
 
       case Some(PlayerServiceMessageView(Word(word: Word))) =>
+        notificationManager.cancel(word.id)
         pause()
         log(s"word = $word")
         val vocabularyPendingIntent: PendingIntent = PendingIntent.getActivity(
@@ -363,6 +343,9 @@ class PlayerService
             .setContentText(word.ipa getOrElse word.descriptions.mkString("\n"))
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setContentIntent(vocabularyPendingIntent)
+            .setAutoCancel(true)
+            .setContentIntent(PlayerServiceIntentMessage(PlayerServiceMessageView(word.id)))
+
             .setDeleteIntent(PlayerServiceIntentMessage(PlayerServiceMessageResume))
             .extend{
               val extender =  new WearableExtender()
@@ -388,7 +371,6 @@ class PlayerService
                         .setStyle(
                           new NotificationCompat.BigTextStyle().bigText(phrase))
                         .build())}
-
                     .addAction(
                       new NotificationCompat.Action.Builder(
                         R.drawable.lookat,
@@ -403,7 +385,7 @@ class PlayerService
             }
 
 
-        notificationManager.notify(word.id | 0x40000, notificationBuilder.build())
+        notificationManager.notify(/*word.id | */0x40000, notificationBuilder.build())
 
       case x if (stop) =>
         Toast.makeText(this, "Service has started", Toast.LENGTH_SHORT).show()
