@@ -301,9 +301,13 @@ class PlayerService
 
   override
   def onStartCommand(intent: Intent, flags: Int, startId: Int): Int = {
-    log(s"mess ${intent.getSerializableExtra("message")}")
-    log(s"word_ids ${intent.getIntArrayExtra("word_ids")}")
-    Option(intent.getSerializableExtra("message")) match {
+//    log(s"mess ${intent.getSerializableExtra("message")}")
+//    log(s"word_ids ${intent.getIntArrayExtra("word_ids")}")
+    try                                                                {
+    Option(intent).flatMap(x => Option(x.getSerializableExtra("message"))).map{ x =>
+      log(s"message = $x")
+      x
+    } match {
       case Some(PlayerServiceMessagePause) =>
         pause()
 
@@ -387,19 +391,23 @@ class PlayerService
 
         notificationManager.notify(/*word.id | */0x40000, notificationBuilder.build())
 
-      case x if (stop) =>
+      case x if (stop && intent != null) =>
         Toast.makeText(this, "Service has started", Toast.LENGTH_SHORT).show()
         servicehandler match {
           case None =>
           case Some(servicehandler) =>
             val msg: Message = servicehandler.obtainMessage();
             msg.arg1 = startId
-            msg.obj = (intent.getIntArrayExtra("word_ids").toList.view ++ queryPlayerIds().toList.view).take(2000).map(new Word(_)(db)).force
+            msg.obj = (Option(intent.getIntArrayExtra("word_ids")).toList.flatMap(_.toList).view ++ queryPlayerIds().toList.view).take(2000).map(new Word(_)(db)).force
 
             servicehandler.sendMessage(msg)
         }
       case _ =>
         Toast.makeText(this, "Pronounciation has already started playing, new intention ignored", Toast.LENGTH_SHORT).show()
+    }
+    } catch {
+      case x: Throwable =>
+        log(s"playservice: $x")
     }
     Service.START_STICKY
   }

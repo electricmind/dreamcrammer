@@ -208,6 +208,7 @@ class TaskService extends Service
   override
   def onStartCommand(intent : Intent, flags : Int, startId : Int) : Int = {
       Toast.makeText(this, "Command has come", Toast.LENGTH_SHORT).show()
+      if (intent != null)
       Option(intent.getSerializableExtra("task").asInstanceOf[Task]).map( task =>
           schedule.add(task) match {
               case Some(task) =>  {
@@ -224,6 +225,7 @@ class TaskService extends Service
           }
       )
 
+      if (intent != null)
       intent.getIntExtra("command",0) match {
               case 1 =>  {
                   log("Reload failed tasks")
