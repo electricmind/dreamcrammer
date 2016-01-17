@@ -210,7 +210,6 @@ class PlayerService
         def apply(w1: Word, w2: Word) = query("select max(hmm2_frequency) from hmm2 where hmm2_word1_id = 3 and hmm2_word2_id=4", "select hmm2_emit_id,hmm2_frequency from hmm2 where hmm2_frequency > abs(random()) % 2 and hmm2_word1_id=3 and hmm2_word2_id=4 order by hmm2_frequency", w1.id, w2.id)
       }
 
-
       override
       def handleMessage(msg: Message): Unit = {
         stop = false
@@ -285,11 +284,11 @@ class PlayerService
                         s"""Stop player""",
                         stopPendingIntent).build())
                     .addAction(
-                      new NotificationCompat.Action.Builder(R.drawable.search, "??????", queryPendingIntent)
+                      new NotificationCompat.Action.Builder(R.drawable.search, "Query the word", queryPendingIntent)
                         .addRemoteInput(new RemoteInput.Builder(EXTRA_VOICE_REPLY)
                           .setLabel("Word?")
                           //.setAllowFreeFormInput (false)
-                          .setChoices(history.toArray.take(2).map(x => new Word(x.asInstanceOf[Int]).value))
+                          .setChoices(history.toArray.takeRight(10).map{x => new Word(x.asInstanceOf[Int]).value })
                           .build())
                         .build())
                 }
@@ -387,9 +386,8 @@ class PlayerService
             .addAction(
               new NotificationCompat.Action.Builder(R.drawable.search, "Query for a word:", queryPendingIntent)
                 .addRemoteInput(new RemoteInput.Builder(EXTRA_VOICE_REPLY)
-                          .setLabel("Word?")
-                          //.setAllowFreeFormInput (false)
-                          .setChoices(history.toArray.take(2).map(x => new Word(x.asInstanceOf[Int]).value))
+                  .setLabel("Word?")
+                  .setChoices(history.toArray.takeRight(10).map{x => new Word(x.asInstanceOf[Int]).value })
                   .build())
                 .build())
             .addAction(
@@ -424,10 +422,10 @@ class PlayerService
       case Some(PlayerServiceMessageQuery) =>
         for {
           remoteInput <- Option(RemoteInput.getResultsFromIntent(intent))
-          wordValue <- Option(remoteInput.getCharSequence(EXTRA_VOICE_REPLY)).map(_.toString)
-          _  = log(s"Word value -> $wordValue")
-
-          word <- Word.query(wordValue)
+          phrase <- Option(remoteInput.getCharSequence(EXTRA_VOICE_REPLY)).map(_.toString)
+          _ = log(s"Word value -> $phrase")
+          term <- phrase.split("""\W+""")
+          word <- Word.query(term)
         } {
           log(s"Word -> $word")
           pause()
