@@ -5,6 +5,7 @@ import android.content.Intent
 import android.graphics.{Bitmap, BitmapFactory}
 import android.os.{Binder, Handler, HandlerThread, IBinder, Message, Process}
 import android.support.v4.app.NotificationCompat.{BigPictureStyle, WearableExtender}
+import android.support.v4.app.RemoteInput
 import android.support.v4.app.{NotificationCompat, NotificationManagerCompat}
 import android.widget.Toast
 import ru.wordmetrix._
@@ -34,12 +35,16 @@ object PlayerService {
 
   case object PlayerServiceMessageResume extends PlayerServiceMessage
 
+  case object PlayerServiceMessageQuery extends PlayerServiceMessage
+
   case object PlayerServiceMessageDefault extends PlayerServiceMessage
 
   object NotificationIds extends Enumeration {
     val Main = Value
   }
 
+
+  val EXTRA_VOICE_REPLY = "extra_voice_reply"
 }
 
 class PlayerService
@@ -251,6 +256,14 @@ class PlayerService
               },
               0)
 
+            val queryPendingIntent: PendingIntent = PendingIntent.getService(
+              PlayerService.this,
+              word.id | 0x40000,
+              new Intent(PlayerService.this, classOf[PlayerService]) {
+                putExtra("message", PlayerServiceMessageQuery)
+              },
+              0)
+
             val notificationBuilder: NotificationCompat.Builder =
               new NotificationCompat.Builder(PlayerService.this)
                 .setSmallIcon(R.drawable.play)
@@ -271,8 +284,16 @@ class PlayerService
                       new NotificationCompat.Action.Builder(
                         R.drawable.exit,
                         s"""Stop player""",
-                        stopPendingIntent).build())}
-
+                        stopPendingIntent).build())
+                    .addAction(
+                      new NotificationCompat.Action.Builder(R.drawable.search, "??????", queryPendingIntent)
+                        .addRemoteInput(new RemoteInput.Builder(EXTRA_VOICE_REPLY)
+                          .setLabel("Word?")
+                          //.setAllowFreeFormInput (false)
+                          .setChoices(history.toArray.take(2).map(x => new Word(x.asInstanceOf[Int]).value))
+                          .build())
+                        .build())
+                }
 
             notificationManager.notify(word.id, notificationBuilder.build())
 
@@ -313,6 +334,14 @@ class PlayerService
       case Some(PlayerServiceMessageStop) =>
         exit()
 
+      case Some(PlayerServiceMessageQuery) =>
+
+        for {
+          remoteInput <- Option(RemoteInput.getResultsFromIntent(intent))
+          word <- Option(remoteInput.getCharSequence(EXTRA_VOICE_REPLY))
+        } {
+          log(word.toString)
+        }
       case Some(PlayerServiceMessageView(Word(word: Word))) =>
         notificationManager.cancel(word.id)
         pause()
