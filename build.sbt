@@ -19,19 +19,19 @@ useProguard in Android := true
 //proguardCache in Android ++= Seq("org.scaloid")
 
 proguardOptions in Android ++= Seq(
-  "-dontobfuscate", 
-  "-dontoptimize", 
-  "-keepattributes Signature", 
+  "-dontobfuscate",
+  "-dontoptimize",
+  "-keepattributes Signature",
   "-printseeds target/seeds.txt" //, 
-//  "-printusage target/usage.txt" //,
-//  "-keep class scala.collection.SeqLike {  public protected *; 	}",
-//  "-dontwarn sun.misc.Unsafe",
-//  "-keep class sun.misc.Unsafe {*;}",
-//  "-libraryjars /usr/local/lib/scala/lib/scala-reflect.jar",
-//  "-keep class scala.android.package**",
-//  "-keep class * extends scala.android.app.Activity",
-//  "-keep class * extends scala.runtime.MethodCache {    public <methods>; }",
-//  "-dontwarn scala.collection.**" // required from Scala 2.11.4
+  //  "-printusage target/usage.txt" //,
+  //  "-keep class scala.collection.SeqLike {  public protected *; 	}",
+  //  "-dontwarn sun.misc.Unsafe",
+  //  "-keep class sun.misc.Unsafe {*;}",
+  //  "-libraryjars /usr/local/lib/scala/lib/scala-reflect.jar",
+  //  "-keep class scala.android.package**",
+  //  "-keep class * extends scala.android.app.Activity",
+  //  "-keep class * extends scala.runtime.MethodCache {    public <methods>; }",
+  //  "-dontwarn scala.collection.**" // required from Scala 2.11.4
 )
 
 //libraryDependencies += "org.scaloid" %% "scaloid" % "4.1"
