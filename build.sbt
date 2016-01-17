@@ -12,7 +12,7 @@ scalacOptions in Compile += "-feature"
 
 updateCheck in Android := {} // disable update check
 
-proguardScala in Android := true
+proguardScala in Android := false
 
 useProguard in Android := true
 
@@ -22,7 +22,7 @@ proguardOptions in Android ++= Seq(
   "-dontobfuscate",
   "-dontoptimize",
   "-keepattributes Signature",
-  "-printseeds target/seeds.txt" //, 
+  "-printseeds target/seeds.txt" //,
   //  "-printusage target/usage.txt" //,
   //  "-keep class scala.collection.SeqLike {  public protected *; 	}",
   //  "-dontwarn sun.misc.Unsafe",
@@ -42,23 +42,23 @@ install <<= install in Android
 
 buildToolsVersion := Some("21.0.0")
 
-//dexMulti in Android := true
-//
-//dexMinimizeMain in Android := true
-//
-//dexMainClasses in Android := Seq(
-//  "com/example/app/MultidexApplication.class",
-//  "android/support/multidex/BuildConfig.class",
-//  "android/support/multidex/MultiDex$V14.class",
-//  "android/support/multidex/MultiDex$V19.class",
-//  "android/support/multidex/MultiDex$V4.class",
-//  "android/support/multidex/MultiDex.class",
-//  "android/support/multidex/MultiDexApplication.class",
-//  "android/support/multidex/MultiDexExtractor$1.class",
-//  "android/support/multidex/MultiDexExtractor.class",
-//  "android/support/multidex/ZipUtil$CentralDirectory.class",
-//  "android/support/multidex/ZipUtil.class"
-//)
+dexMulti in Android := true
+
+dexMinimizeMain in Android := true
+
+dexMainClasses in Android := Seq(
+  "com/example/app/MultidexApplication.class",
+  "android/support/multidex/BuildConfig.class",
+  "android/support/multidex/MultiDex$V14.class",
+  "android/support/multidex/MultiDex$V19.class",
+  "android/support/multidex/MultiDex$V4.class",
+  "android/support/multidex/MultiDex.class",
+  "android/support/multidex/MultiDexApplication.class",
+  "android/support/multidex/MultiDexExtractor$1.class",
+  "android/support/multidex/MultiDexExtractor.class",
+  "android/support/multidex/ZipUtil$CentralDirectory.class",
+  "android/support/multidex/ZipUtil.class"
+)
 // Tests //////////////////////////////
 
 libraryDependencies ++= Seq(

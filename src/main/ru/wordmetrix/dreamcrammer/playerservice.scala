@@ -5,7 +5,7 @@ import android.content.Intent
 import android.graphics.{Bitmap, BitmapFactory}
 import android.os.{Binder, Handler, HandlerThread, IBinder, Message, Process}
 import android.support.v4.app.NotificationCompat.{BigPictureStyle, WearableExtender}
-import android.support.v4.app.{NotificationCompat, NotificationManagerCompat}
+import android.support.v4.app.{NotificationCompat, NotificationManagerCompat, RemoteInput}
 import android.widget.Toast
 import ru.wordmetrix._
 import ru.wordmetrix.dreamcrammer.PlayerService._
@@ -34,12 +34,16 @@ object PlayerService {
 
   case object PlayerServiceMessageResume extends PlayerServiceMessage
 
+  case object PlayerServiceMessageQuery extends PlayerServiceMessage
+
   case object PlayerServiceMessageDefault extends PlayerServiceMessage
 
   object NotificationIds extends Enumeration {
     val Main = Value
   }
 
+
+  val EXTRA_VOICE_REPLY = "extra_voice_reply"
 }
 
 class PlayerService
@@ -206,7 +210,6 @@ class PlayerService
         def apply(w1: Word, w2: Word) = query("select max(hmm2_frequency) from hmm2 where hmm2_word1_id = 3 and hmm2_word2_id=4", "select hmm2_emit_id,hmm2_frequency from hmm2 where hmm2_frequency > abs(random()) % 2 and hmm2_word1_id=3 and hmm2_word2_id=4 order by hmm2_frequency", w1.id, w2.id)
       }
 
-
       override
       def handleMessage(msg: Message): Unit = {
         stop = false
@@ -251,6 +254,14 @@ class PlayerService
               },
               0)
 
+            val queryPendingIntent: PendingIntent = PendingIntent.getService(
+              PlayerService.this,
+              word.id | 0x40000,
+              new Intent(PlayerService.this, classOf[PlayerService]) {
+                putExtra("message", PlayerServiceMessageQuery)
+              },
+              0)
+
             val notificationBuilder: NotificationCompat.Builder =
               new NotificationCompat.Builder(PlayerService.this)
                 .setSmallIcon(R.drawable.play)
@@ -272,8 +283,15 @@ class PlayerService
                         R.drawable.exit,
                         s"""Stop player""",
                         stopPendingIntent).build())
+                    .addAction(
+                      new NotificationCompat.Action.Builder(R.drawable.search, "Query the word", queryPendingIntent)
+                        .addRemoteInput(new RemoteInput.Builder(EXTRA_VOICE_REPLY)
+                          .setLabel("Word?")
+                          //.setAllowFreeFormInput (false)
+                          .setChoices(history.toArray.takeRight(10).map{x => new Word(x.asInstanceOf[Int]).value })
+                          .build())
+                        .build())
                 }
-
 
             notificationManager.notify(word.id, notificationBuilder.build())
 
@@ -300,6 +318,93 @@ class PlayerService
 
   lazy val notifyId = Iterator.from(Random.nextInt / 2)
 
+  def extendedWordNotification(word: Word) = {
+    val vocabularyPendingIntent: PendingIntent = PendingIntent.getActivity(
+      PlayerService.this,
+      word.id | 0x10000,
+      new Intent(PlayerService.this, classOf[Vocabulary]) {
+        putExtra("word_id", word.id)
+      },
+      0)
+
+    val stopPendingIntent: PendingIntent = PendingIntent.getService(
+      PlayerService.this,
+      0 | 0x20000,
+      new Intent(PlayerService.this, classOf[PlayerService]) {
+        putExtra("message", PlayerServiceMessageStop)
+      },
+      0)
+
+    val queryPendingIntent: PendingIntent = PendingIntent.getService(
+      PlayerService.this,
+      word.id | 0x40000,
+      new Intent(PlayerService.this, classOf[PlayerService]) {
+        putExtra("message", PlayerServiceMessageQuery)
+      },
+      0)
+
+    def bitmap = word.pictures.view.flatMap(_.bodyOption).flatMap(body => Try(
+      Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(body, 0, body.size), 256, 256, true)).toOption)
+
+    val notificationBuilder: NotificationCompat.Builder =
+      new NotificationCompat.Builder(PlayerService.this)
+        .setSmallIcon(R.drawable.play)
+        .setContentTitle(word.value)
+        .setContentText(word.ipa getOrElse word.descriptions.mkString("\n"))
+        .setPriority(NotificationCompat.PRIORITY_MAX)
+        .setContentIntent(vocabularyPendingIntent)
+        .setAutoCancel(true)
+        .setContentIntent(PlayerServiceIntentMessage(PlayerServiceMessageView(word.id)))
+
+        .setDeleteIntent(PlayerServiceIntentMessage(PlayerServiceMessageResume))
+        .extend {
+          val extender = new WearableExtender()
+
+          val extenderBitmaps = bitmap.foldLeft(bitmap.headOption.map { bitmap =>
+            extender.setBackground(bitmap)
+          }.getOrElse(extender)) {
+            case (extender, bitmap) =>
+              extender.addPage(
+                new NotificationCompat.Builder(PlayerService.this)
+                  .setStyle(
+                    new BigPictureStyle().bigPicture(bitmap))
+                  .extend(new WearableExtender().setHintShowBackgroundOnly(true))
+                  .build())
+          }
+
+          val extenderPhrases = (word.descriptions.map(_.value) ++ word.phrases.map(_.value)).foldLeft(extenderBitmaps) {
+            case (extender, phrase) =>
+              extender
+                .addPage(
+                  new NotificationCompat.Builder(PlayerService.this)
+                    .setContentTitle(word.value)
+                    .setContentText("phrase:")
+                    .setStyle(
+                      new NotificationCompat.BigTextStyle().bigText(phrase))
+                    .build())
+          }
+            .addAction(
+              new NotificationCompat.Action.Builder(R.drawable.search, "Query for a word:", queryPendingIntent)
+                .addRemoteInput(new RemoteInput.Builder(EXTRA_VOICE_REPLY)
+                  .setLabel("Word?")
+                  .setChoices(history.toArray.takeRight(10).map { x => new Word(x.asInstanceOf[Int]).value })
+                  .build())
+                .build())
+            .addAction(
+              new NotificationCompat.Action.Builder(
+                R.drawable.lookat,
+                s"""open ${word.value}""",
+                vocabularyPendingIntent).build())
+
+          extenderPhrases.addAction(
+            new NotificationCompat.Action.Builder(
+              R.drawable.exit,
+              s"""Stop player""",
+              stopPendingIntent).build())
+        }
+    notificationBuilder
+  }
+
   override
   def onStartCommand(intent: Intent, flags: Int, startId: Int): Int = {
     for {
@@ -314,84 +419,25 @@ class PlayerService
 
             case PlayerServiceMessageResume => resume()
 
-            case PlayerServiceMessageStop => exit()
-
+            case PlayerServiceMessageQuery =>
+              for {
+                remoteInput <- Option(RemoteInput.getResultsFromIntent(intent))
+                phrase <- Option(remoteInput.getCharSequence(EXTRA_VOICE_REPLY)).map(_.toString)
+                _ = log(s"Word value -> $phrase")
+                term <- phrase.split( """\W+""")
+                word <- Word.query(term)
+              } {
+                log(s"Word -> $word")
+                pause()
+                play(word)
+                notificationManager.notify(/*word.id | */ 0x40000, extendedWordNotification(word).build)
+              }
             case PlayerServiceMessageView(Word(word: Word)) =>
               notificationManager.cancel(word.id)
               pause()
               log(s"word = $word")
-              val vocabularyPendingIntent: PendingIntent = PendingIntent.getActivity(
-                PlayerService.this,
-                word.id | 0x10000,
-                new Intent(PlayerService.this, classOf[Vocabulary]) {
-                  putExtra("word_id", word.id)
-                },
-                0)
-
-              val stopPendingIntent: PendingIntent = PendingIntent.getService(
-                PlayerService.this,
-                0 | 0x20000,
-                new Intent(PlayerService.this, classOf[PlayerService]) {
-                  putExtra("message", PlayerServiceMessageStop)
-                },
-                0)
-
-              def bitmap = word.pictures.view.flatMap(_.bodyOption).flatMap(body => Try(
-                Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(body, 0, body.size), 256, 256, true)).toOption)
-
-              val notificationBuilder: NotificationCompat.Builder =
-                new NotificationCompat.Builder(PlayerService.this)
-                  .setSmallIcon(R.drawable.play)
-                  .setContentTitle(word.value)
-                  .setContentText(word.ipa getOrElse word.descriptions.mkString("\n"))
-                  .setPriority(NotificationCompat.PRIORITY_MAX)
-                  .setContentIntent(vocabularyPendingIntent)
-                  .setAutoCancel(true)
-                  .setContentIntent(PlayerServiceIntentMessage(PlayerServiceMessageView(word.id)))
-
-                  .setDeleteIntent(PlayerServiceIntentMessage(PlayerServiceMessageResume))
-                  .extend {
-                    val extender = new WearableExtender()
-
-                    val extenderBitmaps = bitmap.foldLeft(bitmap.headOption.map { bitmap =>
-                      extender.setBackground(bitmap)
-                    }.getOrElse(extender)) {
-                      case (extender, bitmap) =>
-                        extender.addPage(
-                          new NotificationCompat.Builder(PlayerService.this)
-                            .setStyle(
-                              new BigPictureStyle().bigPicture(bitmap))
-                            .extend(new WearableExtender().setHintShowBackgroundOnly(true))
-                            .build())
-                    }
-
-                    val extenderPhrases = (word.descriptions.map(_.value) ++ word.phrases.map(_.value)).foldLeft(extenderBitmaps) {
-                      case (extender, phrase) =>
-                        extender
-                          .addPage(
-                            new NotificationCompat.Builder(PlayerService.this)
-                              .setContentTitle(word.value)
-                              .setContentText("phrase:")
-                              .setStyle(
-                                new NotificationCompat.BigTextStyle().bigText(phrase))
-                              .build())
-                    }
-                      .addAction(
-                        new NotificationCompat.Action.Builder(
-                          R.drawable.lookat,
-                          s"""open ${word.value}""",
-                          vocabularyPendingIntent).build())
-
-                    extenderPhrases.addAction(
-                      new NotificationCompat.Action.Builder(
-                        R.drawable.exit,
-                        s"""Stop player""",
-                        stopPendingIntent).build())
-                  }
-
-              notificationManager.notify(/*word.id | */ 0x40000, notificationBuilder.build())
+              notificationManager.notify(/*word.id | */ 0x40000, extendedWordNotification(word).build)
           }
-
         case _ if (stop) =>
           Toast.makeText(this, "Service has started", Toast.LENGTH_SHORT).show()
           servicehandler foreach { servicehandler =>
