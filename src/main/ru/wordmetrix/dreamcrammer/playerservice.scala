@@ -336,6 +336,14 @@ class PlayerService
       },
       0)
 
+    val queryPendingIntent: PendingIntent = PendingIntent.getService(
+      PlayerService.this,
+      word.id | 0x40000,
+      new Intent(PlayerService.this, classOf[PlayerService]) {
+        putExtra("message", PlayerServiceMessageQuery)
+      },
+      0)
+
     def bitmap = word.pictures.view.flatMap(_.bodyOption).flatMap(body => Try(
       Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(body, 0, body.size), 256, 256, true)).toOption)
 
@@ -376,6 +384,14 @@ class PlayerService
                       new NotificationCompat.BigTextStyle().bigText(phrase))
                     .build())
           }
+            .addAction(
+              new NotificationCompat.Action.Builder(R.drawable.search, "Query for a word:", queryPendingIntent)
+                .addRemoteInput(new RemoteInput.Builder(EXTRA_VOICE_REPLY)
+                          .setLabel("Word?")
+                          //.setAllowFreeFormInput (false)
+                          .setChoices(history.toArray.take(2).map(x => new Word(x.asInstanceOf[Int]).value))
+                  .build())
+                .build())
             .addAction(
               new NotificationCompat.Action.Builder(
                 R.drawable.lookat,
