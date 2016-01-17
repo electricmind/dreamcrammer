@@ -1,47 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ru.wordmetrix.widget.VerticalSlidePane  xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_weight="0.2"
-    android:layout_height="fill_parent"
-    android:orientation="horizontal"
-    >
-
-<!--    <HorizontalScrollView 
+<ru.wordmetrix.widget.VerticalSlidePane
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_weight="0.2"
         android:layout_height="fill_parent"
-        android:layout_width="wrap_content"
-    > -->
+        android:orientation="horizontal"
+        >
 
-    <ru.wordmetrix.dreamcrammer.TextByWords android:id="@+id/phrase_value"
-        android:layout_width="wrap_content" 
-        android:layout_height="fill_parent"
-        android:layout_weight="0.5"
-    />
-
-    <!-- /HorizontalScrollView -->
-    
-    <LinearLayout
-        android:layout_width="fill_parent" 
-        android:layout_height="fill_parent"
-        android:layout_weight="0.5"
-        
-    >                    
-        <Button 
-            android:layout_width="wrap_content"
+    <!--    <HorizontalScrollView
             android:layout_height="fill_parent"
-            android:text="+"        
-        />
-    <ScrollView 
-        android:layout_height="fill_parent"
-        android:layout_width="wrap_content"
-    >
-            <LinearLayout android:id="@+id/phrase_words"
-                android:layout_width="fill_parent"
+            android:layout_width="wrap_content"
+        > -->
+
+    <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            >
+        <ru.wordmetrix.dreamcrammer.TextByWords
+                android:id="@+id/phrase_value"
+                android:layout_width="wrap_content"
                 android:layout_height="fill_parent"
-                android:layout_weight="1.0"
-                android:orientation="vertical"
-             >
-             </LinearLayout>
-     </ScrollView>
-     </LinearLayout>
-     
+                android:layout_weight="0.5"
+                />
+        <Button
+                android:id="@+id/phrase_track"
+                android:text="Play"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAllCaps="false"
+                />
+        <!-- /HorizontalScrollView -->
+    </LinearLayout>
+    <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_weight="0.5"
+
+            >
+        <Button
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:text="+"
+                />
+        <ScrollView
+                android:layout_height="fill_parent"
+                android:layout_width="wrap_content"
+                >
+            <LinearLayout
+                    android:id="@+id/phrase_words"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:layout_weight="1.0"
+                    android:orientation="vertical"
+                    >
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+
 </ru.wordmetrix.widget.VerticalSlidePane>
