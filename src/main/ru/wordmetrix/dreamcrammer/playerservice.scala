@@ -1,9 +1,12 @@
 package ru.wordmetrix.dreamcrammer
 
+import java.util.Locale
+
 import android.app.{PendingIntent, Service}
 import android.content.Intent
 import android.graphics.{Bitmap, BitmapFactory}
 import android.os.{Binder, Handler, HandlerThread, IBinder, Message, Process}
+import android.speech.tts.TextToSpeech
 import android.support.v4.app.NotificationCompat.{BigPictureStyle, WearableExtender}
 import android.support.v4.app.{NotificationCompat, NotificationManagerCompat, RemoteInput}
 import android.widget.Toast
@@ -36,6 +39,8 @@ object PlayerService {
 
   case object PlayerServiceMessageQuery extends PlayerServiceMessage
 
+  case class PlayerServiceMessagePhrase(id: Int) extends PlayerServiceMessage
+
   case object PlayerServiceMessageDefault extends PlayerServiceMessage
 
   object NotificationIds extends Enumeration {
@@ -50,6 +55,9 @@ class PlayerService
   extends Service with PlayerBase {
 
   //IntentService("DictLearnService")
+
+  var textToSpeach: Option[TextToSpeech] = None
+
   var stop: Boolean = true
   var suspended: Boolean = false
   var lock: AnyRef = new Object
@@ -156,9 +164,13 @@ class PlayerService
     else notificationBuilder.addAction(R.drawable.pause, "Pause", PlayerServiceIntentMessage(PlayerServiceMessagePause))
   }
 
-  override
-  def onCreate(): Unit = {
+  override def onCreate(): Unit = {
     notificationManager.notify(NotificationIds.Main.id, mainNotificationBuilder(false).build())
+    textToSpeach = Some(new TextToSpeech(this.getApplicationContext(), new TextToSpeech.OnInitListener() {
+      override def onInit(status: Int): Unit = textToSpeach.foreach { t1 =>
+        if (status != TextToSpeech.ERROR) t1.setLanguage(Locale.UK)
+      }
+    }))
 
     servicehandler = Some(new Handler(new HandlerThread("ServiceStartArguments", Process.THREAD_PRIORITY_BACKGROUND) {
       start()
@@ -210,8 +222,7 @@ class PlayerService
         def apply(w1: Word, w2: Word) = query("select max(hmm2_frequency) from hmm2 where hmm2_word1_id = 3 and hmm2_word2_id=4", "select hmm2_emit_id,hmm2_frequency from hmm2 where hmm2_frequency > abs(random()) % 2 and hmm2_word1_id=3 and hmm2_word2_id=4 order by hmm2_frequency", w1.id, w2.id)
       }
 
-      override
-      def handleMessage(msg: Message): Unit = {
+      override def handleMessage(msg: Message): Unit = {
         stop = false
         suspended = false
 
@@ -343,6 +354,14 @@ class PlayerService
       },
       0)
 
+    val phrasePendingIntent: PendingIntent = PendingIntent.getService(
+      PlayerService.this,
+      word.id | 0x60000,
+      new Intent(PlayerService.this, classOf[PlayerService]) {
+        putExtra("message", PlayerServiceMessagePhrase(word.id))
+      },
+      0)
+
     def bitmap = word.pictures.view.flatMap(_.bodyOption).flatMap(body => Try(
       Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(body, 0, body.size), 256, 256, true)).toOption)
 
@@ -380,7 +399,7 @@ class PlayerService
                     .setContentTitle(word.value)
                     .setContentText("phrase:")
                     .setStyle(
-                      new NotificationCompat.BigTextStyle().bigText(phrase))
+                      new NotificationCompat.BigTextStyle().setBigContentTitle("phrase").bigText(phrase))
                     .build())
           }
             .addAction(
@@ -396,6 +415,16 @@ class PlayerService
                 s"""open ${word.value}""",
                 vocabularyPendingIntent).build())
 
+          if (word.phrases.length > 0) {
+            val phrase = word.phrases((System.currentTimeMillis() / (60 * 60 * 24 * 1000)) % word.phrases.length toInt).value
+            extenderPhrases.addAction(
+              new NotificationCompat.Action.Builder(
+                R.drawable.speak,
+                "Phrase of the day", //phrase,
+                phrasePendingIntent).build())
+          }
+
+
           extenderPhrases.addAction(
             new NotificationCompat.Action.Builder(
               R.drawable.exit,
@@ -405,8 +434,7 @@ class PlayerService
     notificationBuilder
   }
 
-  override
-  def onStartCommand(intent: Intent, flags: Int, startId: Int): Int = {
+  override def onStartCommand(intent: Intent, flags: Int, startId: Int): Int = {
     for {
       intent <- Option(intent)
     } {
@@ -437,14 +465,20 @@ class PlayerService
               pause()
               log(s"word = $word")
               notificationManager.notify(/*word.id | */ 0x40000, extendedWordNotification(word).build)
+
+            case PlayerServiceMessagePhrase(Word(word: Word)) =>
+              textToSpeach foreach { case textToSpeach if 0 < word.phrases.length =>
+                val phrase = word.phrases((System.currentTimeMillis() / (60 * 60 * 24 * 1000)) % word.phrases.length toInt)
+                textToSpeach.speak(phrase.value, TextToSpeech.QUEUE_FLUSH, null)
+                log(s"word = $word, phrase=$phrase")
+              }
           }
         case _ if (stop) =>
           Toast.makeText(this, "Service has started", Toast.LENGTH_SHORT).show()
           servicehandler foreach { servicehandler =>
-            val msg: Message = servicehandler.obtainMessage();
+            val msg: Message = servicehandler.obtainMessage()
             msg.arg1 = startId
             msg.obj = (Option(intent.getIntArrayExtra("word_ids")).toList.flatMap(_.toList).view ++ queryPlayerIds().toList.view).take(2000).map(new Word(_)(db)).force
-
             servicehandler.sendMessage(msg)
           }
         case _ =>
@@ -457,8 +491,13 @@ class PlayerService
     Service.START_STICKY
   }
 
-  override
-  def onDestroy(): Unit = {
-    Toast.makeText(this, "Service has done", Toast.LENGTH_SHORT).show();
+  override def onDestroy(): Unit = {
+    Toast.makeText(this, "Service has done", Toast.LENGTH_SHORT).show()
+    textToSpeach.foreach { tts =>
+      tts.stop()
+      tts.shutdown()
+      textToSpeach = None
+    }
+
   }
 }
