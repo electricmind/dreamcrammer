@@ -36,6 +36,8 @@ object PlayerService {
 
   case object PlayerServiceMessageQuery extends PlayerServiceMessage
 
+  case object PlayerServiceMessageRandom extends PlayerServiceMessage
+
   case object PlayerServiceMessageDefault extends PlayerServiceMessage
 
   object NotificationIds extends Enumeration {
@@ -343,6 +345,14 @@ class PlayerService
       },
       0)
 
+    val randomPendingIntent: PendingIntent = PendingIntent.getService(
+      PlayerService.this,
+      0x50000,
+      new Intent(PlayerService.this, classOf[PlayerService]) {
+        putExtra("message", PlayerServiceMessageRandom)
+      },
+      0)
+
     def bitmap = word.pictures.view.flatMap(_.bodyOption).flatMap(body => Try(
       Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(body, 0, body.size), 256, 256, true)).toOption)
 
@@ -355,7 +365,6 @@ class PlayerService
         .setContentIntent(vocabularyPendingIntent)
         .setAutoCancel(true)
         .setContentIntent(PlayerServiceIntentMessage(PlayerServiceMessageView(word.id)))
-
         .setDeleteIntent(PlayerServiceIntentMessage(PlayerServiceMessageResume))
         .extend {
           val extender = new WearableExtender()
@@ -392,6 +401,11 @@ class PlayerService
                 .build())
             .addAction(
               new NotificationCompat.Action.Builder(
+                R.drawable.postpone,
+                s"""Random""",
+                randomPendingIntent).build())
+            .addAction(
+              new NotificationCompat.Action.Builder(
                 R.drawable.lookat,
                 s"""open ${word.value}""",
                 vocabularyPendingIntent).build())
@@ -405,7 +419,7 @@ class PlayerService
     notificationBuilder
   }
 
-  override
+    override
   def onStartCommand(intent: Intent, flags: Int, startId: Int): Int = {
     for {
       intent <- Option(intent)
@@ -436,7 +450,17 @@ class PlayerService
               notificationManager.cancel(word.id)
               pause()
               log(s"word = $word")
+              play(word)
               notificationManager.notify(/*word.id | */ 0x40000, extendedWordNotification(word).build)
+
+            case PlayerServiceMessageRandom =>
+              notificationManager.cancel(0x40000)
+              pause()
+              val word = new Word(history.get(Random.nextInt(history_size)))
+              log(s"word = $word")
+              play(word)
+              notificationManager.notify(/*word.id | */ 0x40000, extendedWordNotification(word).build)
+
           }
         case _ if (stop) =>
           Toast.makeText(this, "Service has started", Toast.LENGTH_SHORT).show()
