@@ -384,7 +384,7 @@ class PlayerService
         .setContentIntent(vocabularyPendingIntent)
         .setAutoCancel(true)
         .setContentIntent(PlayerServiceIntentMessage(PlayerServiceMessageView(word.id)))
-        .setDeleteIntent(PlayerServiceIntentMessage(PlayerServiceMessageResume))
+        .setDeleteIntent(randomPendingIntent)
         .extend {
           val extender = new WearableExtender()
 
@@ -420,9 +420,9 @@ class PlayerService
                 .build())
             .addAction(
               new NotificationCompat.Action.Builder(
-                R.drawable.postpone,
-                s"""Random""",
-                randomPendingIntent).build())
+                R.drawable.restart,
+                s"""Resume""",
+                PlayerServiceIntentMessage(PlayerServiceMessageResume)).build())
             .addAction(
               new NotificationCompat.Action.Builder(
                 R.drawable.lookat,
@@ -447,7 +447,7 @@ class PlayerService
         }
     notificationBuilder
   }
-  
+
   override def onStartCommand(intent: Intent, flags: Int, startId: Int): Int = {
   for {
       intent <- Option(intent)
@@ -459,7 +459,9 @@ class PlayerService
           message match {
             case PlayerServiceMessagePause => pause()
 
-            case PlayerServiceMessageResume => resume()
+            case PlayerServiceMessageResume =>
+              notificationManager.cancel(0x40000)
+              resume()
 
             case PlayerServiceMessageQuery =>
               for {
