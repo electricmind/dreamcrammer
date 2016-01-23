@@ -55,7 +55,9 @@ class DreamCrammerBase extends FragmentActivity with MenuBase with PlayerBase {
     textToSpeach.foreach { tts =>
         tts.stop()
         tts.shutdown()
+        textToSpeach = None
     }
+
     super.onPause()
   }
 
