@@ -3,6 +3,7 @@ package ru.wordmetrix.dreamcrammer
 import android.app.PendingIntent
 import android.content.{Context, Intent}
 import android.os.Bundle
+import android.speech.tts.TextToSpeech
 import android.support.v4.app.NotificationCompat.WearableExtender
 import android.support.v4.app.{NotificationCompat, NotificationManagerCompat}
 import android.support.v4.widget.{DrawerLayout, SlidingPaneLayout}
@@ -134,20 +135,37 @@ class Questionaire extends DreamCrammerBase with MenuQuestionaire {
 
   def onPronounce(view: View = null) = {
     log("pronounce")
-    queue.exists(_.headOption.exists(x => x.question match {
-      case w: Word =>
-        play(w); true
-      case _ => {
-        for (answer <- x.answers) {
-          answer match {
-            case w: Word =>
-              play(w); true
-            case _ => false
-          }
+    for {
+      queue <- queue
+      x <- queue.headOption
+    } {
+      (for {
+        tts <- textToSpeach
+        value <- x.answers.headOption.collect{
+          case p: Phrase =>
+            val index = (System.currentTimeMillis() / (1000*60*60*24) % x.answers.length).toInt
+            x.answers(index)
+        }.collect{
+          case p: Phrase =>
+            p.value
         }
-        true
+      } yield {
+          tts.speak(value, TextToSpeech.QUEUE_FLUSH, null)
+        }) orElse (x.answers collect {
+        case w: Word => play(w)
+      } headOption) getOrElse {
+        x.question match {
+          case w: Word => play(w)
+
+          case p: Phrase =>
+            textToSpeach foreach {
+              case tts => tts.speak(p.value, TextToSpeech.QUEUE_FLUSH, null)
+            }
+
+          case _ =>
+        }
       }
-    }))
+    }
   }
 
   def publish(queue: Queue[Field, Field]): Unit = {
