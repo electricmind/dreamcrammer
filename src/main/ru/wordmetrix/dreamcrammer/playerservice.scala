@@ -89,7 +89,8 @@ class PlayerService
   }
 
   def exit(): Unit = {
-    notificationManager.notify(NotificationIds.Main.id, mainNotificationBuilder(true).build())
+    //notificationManager.notify(NotificationIds.Main.id, mainNotificationBuilder(true).build())
+    notificationManager.cancel(NotificationIds.Main.id)
     stop = true
   }
 
@@ -458,6 +459,10 @@ class PlayerService
 
           message match {
             case PlayerServiceMessagePause => pause()
+
+            case PlayerServiceMessageStop =>
+              notificationManager.cancel(0x40000)
+              exit()
 
             case PlayerServiceMessageResume =>
               notificationManager.cancel(0x40000)
