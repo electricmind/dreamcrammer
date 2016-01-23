@@ -418,9 +418,8 @@ class PlayerService
         }
     notificationBuilder
   }
-
-    override
-  def onStartCommand(intent: Intent, flags: Int, startId: Int): Int = {
+  
+  override def onStartCommand(intent: Intent, flags: Int, startId: Int): Int = {
     for {
       intent <- Option(intent)
     } {
@@ -448,8 +447,8 @@ class PlayerService
               }
             case PlayerServiceMessageView(Word(word: Word)) =>
               notificationManager.cancel(word.id)
-              pause()
               log(s"word = $word")
+              pause()
               play(word)
               notificationManager.notify(/*word.id | */ 0x40000, extendedWordNotification(word).build)
 
