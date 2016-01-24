@@ -3,7 +3,7 @@ package ru.wordmetrix.dreamcrammer
 import java.util.Locale
 
 import android.app.{PendingIntent, Service}
-import android.content.{Context, Intent}
+import android.content.{IntentFilter, BroadcastReceiver, Context, Intent}
 import android.graphics.{Bitmap, BitmapFactory}
 import android.media.AudioManager
 import android.os.{Binder, Handler, HandlerThread, IBinder, Message, Process}
@@ -63,6 +63,21 @@ object PlayerService {
 class PlayerService extends Service with PlayerBase {
 
   //IntentService("DictLearnService")
+
+  private object myNoisyAudioStreamReceiver extends BroadcastReceiver {
+    override def onReceive(context: Context, intent: Intent) {
+      intent.getAction() match {
+        case AudioManager.ACTION_AUDIO_BECOMING_NOISY =>
+          log(s"AudioM = noisy")
+          pause()
+
+        case x =>
+          log(s"AudioM = $x")
+      }
+    }
+  }
+
+  private val noisyAudioStreamIntentFitler = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
 
   var textToSpeach: Option[TextToSpeech] = None
 
@@ -195,7 +210,7 @@ class PlayerService extends Service with PlayerBase {
         null
     }
 
-    // Start listening for button presses
+    registerReceiver(myNoisyAudioStreamReceiver, noisyAudioStreamIntentFitler)
 
     servicehandler = Some(new Handler(new HandlerThread("ServiceStartArguments", Process.THREAD_PRIORITY_BACKGROUND) {
       start()
@@ -600,5 +615,7 @@ class PlayerService extends Service with PlayerBase {
         am.unregisterMediaButtonEventReceiver(PlayerServiceRemoteControlReceiver.ComponentName)
         this.am = None
     }
+
+    unregisterReceiver(myNoisyAudioStreamReceiver)
   }
 }
