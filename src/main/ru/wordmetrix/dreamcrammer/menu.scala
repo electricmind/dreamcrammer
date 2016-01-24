@@ -117,7 +117,7 @@ trait MenuBase extends Activity
       val name = db.getPath()
       db.close()
       
-      log("Database path %s", name)
+      log("Database path %s", that name)
       val fout = new FileOutputStream(name)
       fout.write(data)
       fout.close()

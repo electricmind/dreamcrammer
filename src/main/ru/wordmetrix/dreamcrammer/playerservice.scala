@@ -3,8 +3,9 @@ package ru.wordmetrix.dreamcrammer
 import java.util.Locale
 
 import android.app.{PendingIntent, Service}
-import android.content.Intent
+import android.content.{Context, Intent}
 import android.graphics.{Bitmap, BitmapFactory}
+import android.media.AudioManager
 import android.os.{Binder, Handler, HandlerThread, IBinder, Message, Process}
 import android.speech.tts.TextToSpeech
 import android.support.v4.app.NotificationCompat.{BigPictureStyle, WearableExtender}
@@ -35,6 +36,12 @@ object PlayerService {
 
   case object PlayerServiceMessagePause extends PlayerServiceMessage
 
+  case object PlayerServiceMessageViewLast extends PlayerServiceMessage
+
+  case object PlayerServiceMessageViewNext extends PlayerServiceMessage
+
+  case object PlayerServiceMessageViewPrevious extends PlayerServiceMessage
+
   case object PlayerServiceMessageResume extends PlayerServiceMessage
 
   case object PlayerServiceMessageQuery extends PlayerServiceMessage
@@ -49,12 +56,11 @@ object PlayerService {
     val Main = Value
   }
 
-
   val EXTRA_VOICE_REPLY = "extra_voice_reply"
 }
 
-class PlayerService
-  extends Service with PlayerBase {
+
+class PlayerService extends Service with PlayerBase {
 
   //IntentService("DictLearnService")
 
@@ -69,12 +75,14 @@ class PlayerService
   val handler: Handler = new Handler();
 
   val history = new java.util.ArrayList[Int]()
+
   var history_size = 0
+
+  var history_current = 0
 
   var servicehandler: Option[Handler] = None
 
-  override
-  def onBind(intent: Intent): IBinder = binder
+  override def onBind(intent: Intent): IBinder = binder
 
   def status(): (Boolean, Boolean) = (stop, suspended)
 
@@ -167,6 +175,8 @@ class PlayerService
     else notificationBuilder.addAction(R.drawable.pause, "Pause", PlayerServiceIntentMessage(PlayerServiceMessagePause))
   }
 
+  var am: Option[AudioManager] = None
+
   override def onCreate(): Unit = {
     notificationManager.notify(NotificationIds.Main.id, mainNotificationBuilder(false).build())
     textToSpeach = Some(new TextToSpeech(this.getApplicationContext(), new TextToSpeech.OnInitListener() {
@@ -174,6 +184,18 @@ class PlayerService
         if (status != TextToSpeech.ERROR) t1.setLanguage(Locale.UK)
       }
     }))
+
+    am = Some(this.getSystemService(Context.AUDIO_SERVICE)) collect {
+      case am: AudioManager =>
+        am.registerMediaButtonEventReceiver(PlayerServiceRemoteControlReceiver.ComponentName)
+        println("RemoteControlReceiver regisered")
+        am
+      case x =>
+        println(s"RemoteControlReceiver wrong = $x")
+        null
+    }
+
+    // Start listening for button presses
 
     servicehandler = Some(new Handler(new HandlerThread("ServiceStartArguments", Process.THREAD_PRIORITY_BACKGROUND) {
       start()
@@ -240,6 +262,7 @@ class PlayerService
             })
 
             history.add(word.id)
+            history_current = history_size
             history_size = history_size + 1
 
             notificationManager.notify(NotificationIds.Main.id, mainNotificationBuilder(false).build())
@@ -302,7 +325,7 @@ class PlayerService
                         .addRemoteInput(new RemoteInput.Builder(EXTRA_VOICE_REPLY)
                           .setLabel("Word?")
                           //.setAllowFreeFormInput (false)
-                          .setChoices(history.toArray.takeRight(10).map{x => new Word(x.asInstanceOf[Int]).value })
+                          .setChoices(history.toArray.takeRight(10).reverse.map{x => new Word(x.asInstanceOf[Int]).value })
                           .build())
                         .build())
                 }
@@ -315,10 +338,10 @@ class PlayerService
               }
             }, 120000)
 
-            Thread.sleep(500)
-            play(word)
-            Thread.sleep(2000)
-            play(word)
+            if (!stop && !suspended) Thread.sleep(500)
+            if (!stop && !suspended) play(word)
+            if (!stop && !suspended) Thread.sleep(2000)
+            if (!stop && !suspended) play(word)
             word
           })
         }
@@ -416,7 +439,7 @@ class PlayerService
               new NotificationCompat.Action.Builder(R.drawable.search, "Query for a word:", queryPendingIntent)
                 .addRemoteInput(new RemoteInput.Builder(EXTRA_VOICE_REPLY)
                   .setLabel("Word?")
-                  .setChoices(history.toArray.takeRight(10).map { x => new Word(x.asInstanceOf[Int]).value })
+                  .setChoices(history.toArray.takeRight(10).reverse.map { x => new Word(x.asInstanceOf[Int]).value })
                   .build())
                 .build())
             .addAction(
@@ -450,7 +473,7 @@ class PlayerService
   }
 
   override def onStartCommand(intent: Intent, flags: Int, startId: Int): Int = {
-  for {
+    for {
       intent <- Option(intent)
     } {
       Option(intent.getSerializableExtra("message")) match {
@@ -487,6 +510,48 @@ class PlayerService
               pause()
               play(word)
               notificationManager.notify(/*word.id | */ 0x40000, extendedWordNotification(word).build)
+
+            case PlayerServiceMessageViewLast =>
+              if (history_size > 0) {
+                val word = new Word(history.get(history_size-1))
+                log(s"word = $word")
+                notificationManager.notify(/*word.id | */ 0x40000, extendedWordNotification(word).build)
+              }
+
+              pause()
+
+            case PlayerServiceMessageViewPrevious if history_size > 0 =>
+              if (history_current > 1 && history_current < history_size) {
+                history_current -= 1
+              }
+
+              val word = new Word(history.get(history_current))
+              log(s"word = $word")
+              play(word)
+              notificationManager.notify(/*word.id | */ 0x40000, extendedWordNotification(word).build)
+
+              pause()
+
+            case PlayerServiceMessageViewNext if history_size > 0 =>
+              if (history_current > 0 && history_current < history_size-1) {
+                history_current += 1
+              }
+
+              val word = new Word(history.get(history_current))
+              log(s"word = $word")
+              play(word)
+              notificationManager.notify(/*word.id | */ 0x40000, extendedWordNotification(word).build)
+
+              pause()
+
+            case PlayerServiceMessageViewLast =>
+              if (history_size > 0) {
+                val word = new Word(history.get(history_size-1))
+                log(s"word = $word")
+                notificationManager.notify(/*word.id | */ 0x40000, extendedWordNotification(word).build)
+              }
+
+              pause()
 
             case PlayerServiceMessageRandom =>
               notificationManager.cancel(0x40000)
@@ -530,5 +595,10 @@ class PlayerService
       textToSpeach = None
     }
 
+    am.foreach {
+      case am: AudioManager =>
+        am.unregisterMediaButtonEventReceiver(PlayerServiceRemoteControlReceiver.ComponentName)
+        this.am = None
+    }
   }
 }
