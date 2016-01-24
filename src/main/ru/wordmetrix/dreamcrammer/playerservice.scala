@@ -3,8 +3,9 @@ package ru.wordmetrix.dreamcrammer
 import java.util.Locale
 
 import android.app.{PendingIntent, Service}
-import android.content.Intent
+import android.content.{Context, Intent}
 import android.graphics.{Bitmap, BitmapFactory}
+import android.media.AudioManager
 import android.os.{Binder, Handler, HandlerThread, IBinder, Message, Process}
 import android.speech.tts.TextToSpeech
 import android.support.v4.app.NotificationCompat.{BigPictureStyle, WearableExtender}
@@ -49,12 +50,11 @@ object PlayerService {
     val Main = Value
   }
 
-
   val EXTRA_VOICE_REPLY = "extra_voice_reply"
 }
 
-class PlayerService
-  extends Service with PlayerBase {
+
+class PlayerService extends Service with PlayerBase {
 
   //IntentService("DictLearnService")
 
@@ -69,12 +69,12 @@ class PlayerService
   val handler: Handler = new Handler();
 
   val history = new java.util.ArrayList[Int]()
+
   var history_size = 0
 
   var servicehandler: Option[Handler] = None
 
-  override
-  def onBind(intent: Intent): IBinder = binder
+  override def onBind(intent: Intent): IBinder = binder
 
   def status(): (Boolean, Boolean) = (stop, suspended)
 
@@ -167,6 +167,8 @@ class PlayerService
     else notificationBuilder.addAction(R.drawable.pause, "Pause", PlayerServiceIntentMessage(PlayerServiceMessagePause))
   }
 
+  var am: Option[AudioManager] = None
+
   override def onCreate(): Unit = {
     notificationManager.notify(NotificationIds.Main.id, mainNotificationBuilder(false).build())
     textToSpeach = Some(new TextToSpeech(this.getApplicationContext(), new TextToSpeech.OnInitListener() {
@@ -174,6 +176,18 @@ class PlayerService
         if (status != TextToSpeech.ERROR) t1.setLanguage(Locale.UK)
       }
     }))
+
+    am = Some(this.getSystemService(Context.AUDIO_SERVICE)) collect {
+      case am: AudioManager =>
+        am.registerMediaButtonEventReceiver(PlayerServiceRemoteControlReceiver.ComponentName)
+        println("RemoteControlReceiver regisered")
+        am
+      case x =>
+        println(s"RemoteControlReceiver wrong = $x")
+        null
+    }
+
+    // Start listening for button presses
 
     servicehandler = Some(new Handler(new HandlerThread("ServiceStartArguments", Process.THREAD_PRIORITY_BACKGROUND) {
       start()
@@ -450,7 +464,7 @@ class PlayerService
   }
 
   override def onStartCommand(intent: Intent, flags: Int, startId: Int): Int = {
-  for {
+    for {
       intent <- Option(intent)
     } {
       Option(intent.getSerializableExtra("message")) match {
@@ -530,5 +544,10 @@ class PlayerService
       textToSpeach = None
     }
 
+    am.foreach {
+      case am: AudioManager =>
+        am.unregisterMediaButtonEventReceiver(PlayerServiceRemoteControlReceiver.ComponentName)
+        this.am = None
+    }
   }
 }
