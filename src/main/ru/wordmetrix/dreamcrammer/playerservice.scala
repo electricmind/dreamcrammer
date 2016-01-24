@@ -36,6 +36,12 @@ object PlayerService {
 
   case object PlayerServiceMessagePause extends PlayerServiceMessage
 
+  case object PlayerServiceMessageViewLast extends PlayerServiceMessage
+
+  case object PlayerServiceMessageViewNext extends PlayerServiceMessage
+
+  case object PlayerServiceMessageViewPrevious extends PlayerServiceMessage
+
   case object PlayerServiceMessageResume extends PlayerServiceMessage
 
   case object PlayerServiceMessageQuery extends PlayerServiceMessage
@@ -71,6 +77,8 @@ class PlayerService extends Service with PlayerBase {
   val history = new java.util.ArrayList[Int]()
 
   var history_size = 0
+
+  var history_current = 0
 
   var servicehandler: Option[Handler] = None
 
@@ -254,6 +262,7 @@ class PlayerService extends Service with PlayerBase {
             })
 
             history.add(word.id)
+            history_current = history_size
             history_size = history_size + 1
 
             notificationManager.notify(NotificationIds.Main.id, mainNotificationBuilder(false).build())
@@ -316,7 +325,7 @@ class PlayerService extends Service with PlayerBase {
                         .addRemoteInput(new RemoteInput.Builder(EXTRA_VOICE_REPLY)
                           .setLabel("Word?")
                           //.setAllowFreeFormInput (false)
-                          .setChoices(history.toArray.takeRight(10).map{x => new Word(x.asInstanceOf[Int]).value })
+                          .setChoices(history.toArray.takeRight(10).reverse.map{x => new Word(x.asInstanceOf[Int]).value })
                           .build())
                         .build())
                 }
@@ -329,10 +338,10 @@ class PlayerService extends Service with PlayerBase {
               }
             }, 120000)
 
-            Thread.sleep(500)
-            play(word)
-            Thread.sleep(2000)
-            play(word)
+            if (!stop && !suspended) Thread.sleep(500)
+            if (!stop && !suspended) play(word)
+            if (!stop && !suspended) Thread.sleep(2000)
+            if (!stop && !suspended) play(word)
             word
           })
         }
@@ -430,7 +439,7 @@ class PlayerService extends Service with PlayerBase {
               new NotificationCompat.Action.Builder(R.drawable.search, "Query for a word:", queryPendingIntent)
                 .addRemoteInput(new RemoteInput.Builder(EXTRA_VOICE_REPLY)
                   .setLabel("Word?")
-                  .setChoices(history.toArray.takeRight(10).map { x => new Word(x.asInstanceOf[Int]).value })
+                  .setChoices(history.toArray.takeRight(10).reverse.map { x => new Word(x.asInstanceOf[Int]).value })
                   .build())
                 .build())
             .addAction(
@@ -501,6 +510,48 @@ class PlayerService extends Service with PlayerBase {
               pause()
               play(word)
               notificationManager.notify(/*word.id | */ 0x40000, extendedWordNotification(word).build)
+
+            case PlayerServiceMessageViewLast =>
+              if (history_size > 0) {
+                val word = new Word(history.get(history_size-1))
+                log(s"word = $word")
+                notificationManager.notify(/*word.id | */ 0x40000, extendedWordNotification(word).build)
+              }
+
+              pause()
+
+            case PlayerServiceMessageViewPrevious if history_size > 0 =>
+              if (history_current > 1 && history_current < history_size) {
+                history_current -= 1
+              }
+
+              val word = new Word(history.get(history_current))
+              log(s"word = $word")
+              play(word)
+              notificationManager.notify(/*word.id | */ 0x40000, extendedWordNotification(word).build)
+
+              pause()
+
+            case PlayerServiceMessageViewNext if history_size > 0 =>
+              if (history_current > 0 && history_current < history_size-1) {
+                history_current += 1
+              }
+
+              val word = new Word(history.get(history_current))
+              log(s"word = $word")
+              play(word)
+              notificationManager.notify(/*word.id | */ 0x40000, extendedWordNotification(word).build)
+
+              pause()
+
+            case PlayerServiceMessageViewLast =>
+              if (history_size > 0) {
+                val word = new Word(history.get(history_size-1))
+                log(s"word = $word")
+                notificationManager.notify(/*word.id | */ 0x40000, extendedWordNotification(word).build)
+              }
+
+              pause()
 
             case PlayerServiceMessageRandom =>
               notificationManager.cancel(0x40000)
