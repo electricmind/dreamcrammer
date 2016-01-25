@@ -108,6 +108,9 @@ class PlayerService extends Service with PlayerBase {
 
   def resume(): Unit = {
     notificationManager.notify(NotificationIds.Main.id, mainNotificationBuilder(false).build())
+    am foreach {
+      _.registerMediaButtonEventReceiver(PlayerServiceRemoteControlReceiver.ComponentName)
+    }
     suspended = false
   }
 
