@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">dreamcrammer</string>
+    <string name="description">
+        The Dreamcrammer application stores vocabulary, that you can customize with pictures, samples, and descriptons.
+        It provides an ablity to learn it with flashcards as well as reading aloud.
+        Using a headset one can drive tracks back and forth.
+        Smartwatch support is available also.
+    </string>
 </resources>
