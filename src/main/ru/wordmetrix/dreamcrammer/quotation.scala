@@ -28,9 +28,9 @@ class Quotation extends FieldBase[Phrase] with MenuQuotation with PhraseBaseDial
   def doEdit() = field.map(new PhraseEditDialog(_).show(getSupportFragmentManager(), "phraseedit"))
 
   /*     def addPhrase() = field match {
-           case Some(x) => new PhraseAddDialog(x).show(getSupportFragmentManager(), "wordadd")
-           case None => log("Dialog has been called without any phrase")
-       }*/
+             case Some(x) => new PhraseAddDialog(x).show(getSupportFragmentManager(), "wordadd")
+             case None => log("Dialog has been called without any phrase")
+         }*/
 
   override
   def layout = R.layout.quotation

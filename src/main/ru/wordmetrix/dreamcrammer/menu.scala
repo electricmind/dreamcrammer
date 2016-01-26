@@ -4,6 +4,7 @@ import java.net._
 import java.io._
 import android.app.Activity
 import android.os.Bundle
+import android.support.v4.app.FragmentActivity
 import scala.annotation.tailrec
 import scala.util.Random
 import android.widget.{TextView,ToggleButton}
@@ -69,8 +70,15 @@ trait MenuBase extends Activity
             }
 
             case R.id.help => {
-                println("Help!!")
-                true
+                println("Help!! ")
+                log(s"Version=${Version.version}")
+                this match {
+                  case x: FragmentActivity =>
+                    new HelpDialog().show(x.getSupportFragmentManager(), "Help")
+                  case _ =>
+                }
+
+              true
             }
 
             case R.id.reload => {

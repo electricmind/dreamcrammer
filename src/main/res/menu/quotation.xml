@@ -42,7 +42,7 @@
 
     <item android:id="@+id/help"
           android:icon="@drawable/help"
-          android:title="help" />
+          android:title="About" />
 
 
     <item android:id="@+id/settings"

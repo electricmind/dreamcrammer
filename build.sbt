@@ -68,3 +68,22 @@ libraryDependencies ++= Seq(
 
 // without this, @Config throws an exception,
 unmanagedClasspath in Test ++= (bootClasspath in Android).value
+
+sourceGenerators in Compile <+= Def.task {
+  val file = (sourceManaged in Compile).value / "version.scala"
+  IO.write(file,
+    s"""
+       |package ru.wordmetrix.dreamcrammer
+       |object Version {
+       | val branch="${git.gitCurrentBranch.value}"
+       | val commit="${git.gitHeadCommit.value getOrElse "Unknown"}"
+       | val date="${System.currentTimeMillis()}"
+       | val version=s"$${branch}-$${commit}-$${date}"
+       |}
+          """.stripMargin)
+  Seq(file)
+}
+
+
+
+
