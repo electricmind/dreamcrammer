@@ -3,7 +3,7 @@ package ru.wordmetrix.dreamcrammer
 import java.util.Locale
 
 import android.app.{PendingIntent, Service}
-import android.content.{Context, Intent}
+import android.content.{BroadcastReceiver, Context, Intent, IntentFilter}
 import android.graphics.{Bitmap, BitmapFactory}
 import android.media.AudioManager
 import android.os.{Binder, Handler, HandlerThread, IBinder, Message, Process}
@@ -64,6 +64,21 @@ class PlayerService extends Service with PlayerBase {
 
   //IntentService("DictLearnService")
 
+  private object myNoisyAudioStreamReceiver extends BroadcastReceiver {
+    override def onReceive(context: Context, intent: Intent) {
+      intent.getAction() match {
+        case AudioManager.ACTION_AUDIO_BECOMING_NOISY =>
+          log(s"AudioM = noisy")
+          pause()
+
+        case x =>
+          log(s"AudioM = $x")
+      }
+    }
+  }
+
+  private val noisyAudioStreamIntentFitler = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
+
   var textToSpeach: Option[TextToSpeech] = None
 
   var stop: Boolean = true
@@ -93,6 +108,9 @@ class PlayerService extends Service with PlayerBase {
 
   def resume(): Unit = {
     notificationManager.notify(NotificationIds.Main.id, mainNotificationBuilder(false).build())
+    am foreach {
+      _.registerMediaButtonEventReceiver(PlayerServiceRemoteControlReceiver.ComponentName)
+    }
     suspended = false
   }
 
@@ -195,7 +213,7 @@ class PlayerService extends Service with PlayerBase {
         null
     }
 
-    // Start listening for button presses
+    registerReceiver(myNoisyAudioStreamReceiver, noisyAudioStreamIntentFitler)
 
     servicehandler = Some(new Handler(new HandlerThread("ServiceStartArguments", Process.THREAD_PRIORITY_BACKGROUND) {
       start()
@@ -435,23 +453,6 @@ class PlayerService extends Service with PlayerBase {
                       new NotificationCompat.BigTextStyle().setBigContentTitle("phrase").bigText(phrase))
                     .build())
           }
-            .addAction(
-              new NotificationCompat.Action.Builder(R.drawable.search, "Query for a word:", queryPendingIntent)
-                .addRemoteInput(new RemoteInput.Builder(EXTRA_VOICE_REPLY)
-                  .setLabel("Word?")
-                  .setChoices(history.toArray.takeRight(10).reverse.map { x => new Word(x.asInstanceOf[Int]).value })
-                  .build())
-                .build())
-            .addAction(
-              new NotificationCompat.Action.Builder(
-                R.drawable.restart,
-                s"""Resume""",
-                PlayerServiceIntentMessage(PlayerServiceMessageResume)).build())
-            .addAction(
-              new NotificationCompat.Action.Builder(
-                R.drawable.lookat,
-                s"""open ${word.value}""",
-                vocabularyPendingIntent).build())
 
           if (word.phrases.length > 0) {
             val phrase = word.phrases((System.currentTimeMillis() / (60 * 60 * 24 * 1000)) % word.phrases.length toInt).value
@@ -461,6 +462,25 @@ class PlayerService extends Service with PlayerBase {
                 "Phrase of the day", //phrase,
                 phrasePendingIntent).build())
           }
+
+          extenderPhrases.addAction(
+            new NotificationCompat.Action.Builder(
+              R.drawable.restart,
+              s"""Resume""",
+              PlayerServiceIntentMessage(PlayerServiceMessageResume)).build())
+            .addAction(
+              new NotificationCompat.Action.Builder(R.drawable.search, "Query for a word:", queryPendingIntent)
+                .addRemoteInput(new RemoteInput.Builder(EXTRA_VOICE_REPLY)
+                  .setLabel("Word?")
+                  .setChoices(history.toArray.takeRight(10).reverse.map { x => new Word(x.asInstanceOf[Int]).value })
+                  .build())
+                .build())
+            .addAction(
+              new NotificationCompat.Action.Builder(
+                R.drawable.lookat,
+                s"""open ${word.value}""",
+                vocabularyPendingIntent).build())
+
 
 
           extenderPhrases.addAction(
@@ -513,7 +533,7 @@ class PlayerService extends Service with PlayerBase {
 
             case PlayerServiceMessageViewLast =>
               if (history_size > 0) {
-                val word = new Word(history.get(history_size-1))
+                val word = new Word(history.get(history_size - 1))
                 log(s"word = $word")
                 notificationManager.notify(/*word.id | */ 0x40000, extendedWordNotification(word).build)
               }
@@ -533,7 +553,7 @@ class PlayerService extends Service with PlayerBase {
               pause()
 
             case PlayerServiceMessageViewNext if history_size > 0 =>
-              if (history_current > 0 && history_current < history_size-1) {
+              if (history_current > 0 && history_current < history_size - 1) {
                 history_current += 1
               }
 
@@ -546,7 +566,7 @@ class PlayerService extends Service with PlayerBase {
 
             case PlayerServiceMessageViewLast =>
               if (history_size > 0) {
-                val word = new Word(history.get(history_size-1))
+                val word = new Word(history.get(history_size - 1))
                 log(s"word = $word")
                 notificationManager.notify(/*word.id | */ 0x40000, extendedWordNotification(word).build)
               }
@@ -600,5 +620,7 @@ class PlayerService extends Service with PlayerBase {
         am.unregisterMediaButtonEventReceiver(PlayerServiceRemoteControlReceiver.ComponentName)
         this.am = None
     }
+
+    unregisterReceiver(myNoisyAudioStreamReceiver)
   }
 }
