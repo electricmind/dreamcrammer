@@ -16,7 +16,9 @@ import ru.wordmetrix.dreamcrammer.PlayerService._
 import ru.wordmetrix.dreamcrammer.db._
 
 import scala.annotation.tailrec
+import scala.concurrent.Future
 import scala.util.{Random, Try}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class PlayerBinder(val service: PlayerService) extends Binder {
   def getService(): PlayerService = {
@@ -43,6 +45,8 @@ object PlayerService {
   case object PlayerServiceMessageViewPrevious extends PlayerServiceMessage
 
   case object PlayerServiceMessageResume extends PlayerServiceMessage
+
+  case class PlayerServiceMessageAdvance(id: Int)  extends PlayerServiceMessage
 
   case object PlayerServiceMessageQuery extends PlayerServiceMessage
 
@@ -414,6 +418,14 @@ class PlayerService extends Service with PlayerBase {
       },
       0)
 
+    val advancePendingIntent: PendingIntent = PendingIntent.getService(
+      PlayerService.this,
+      word.id | 0x70000,
+      new Intent(PlayerService.this, classOf[PlayerService]) {
+        putExtra("message", PlayerServiceMessageAdvance(word.id))
+      },
+      0)
+
     def bitmap = word.pictures.view.flatMap(_.bodyOption).flatMap(body => Try(
       Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(body, 0, body.size), 256, 256, true)).toOption)
 
@@ -465,9 +477,14 @@ class PlayerService extends Service with PlayerBase {
 
           extenderPhrases.addAction(
             new NotificationCompat.Action.Builder(
-              R.drawable.restart,
-              s"""Resume""",
-              PlayerServiceIntentMessage(PlayerServiceMessageResume)).build())
+              R.drawable.advance,
+              s"""advance ${word.value}""",
+              advancePendingIntent).build())
+            .addAction(
+             new NotificationCompat.Action.Builder(
+                R.drawable.restart,
+                s"""Resume""",
+                PlayerServiceIntentMessage(PlayerServiceMessageResume)).build())
             .addAction(
               new NotificationCompat.Action.Builder(R.drawable.search, "Query for a word:", queryPendingIntent)
                 .addRemoteInput(new RemoteInput.Builder(EXTRA_VOICE_REPLY)
@@ -524,6 +541,17 @@ class PlayerService extends Service with PlayerBase {
                 play(word)
                 notificationManager.notify(/*word.id | */ 0x40000, extendedWordNotification(word).build)
               }
+
+            case PlayerServiceMessageAdvance(Word(word: Word)) =>
+              log(s"advance 2word = $word")
+              Future {
+                new Convertors().word2phrases.ahead(word)
+                new Convertors().word2pictures.ahead(word)
+                new Convertors().phrase2words.ahead(word)
+                notificationManager.cancel(0x40000)
+                resume()
+              }
+
             case PlayerServiceMessageView(Word(word: Word)) =>
               notificationManager.cancel(word.id)
               log(s"word = $word")
@@ -537,7 +565,6 @@ class PlayerService extends Service with PlayerBase {
                 log(s"word = $word")
                 notificationManager.notify(/*word.id | */ 0x40000, extendedWordNotification(word).build)
               }
-
               pause()
 
             case PlayerServiceMessageViewPrevious if history_size > 0 =>
