@@ -8,7 +8,7 @@ import android.graphics.{Bitmap, BitmapFactory}
 import android.media.AudioManager
 import android.os.{Binder, Handler, HandlerThread, IBinder, Message, Process}
 import android.speech.tts.TextToSpeech
-import android.support.v4.app.NotificationCompat.{BigPictureStyle, WearableExtender}
+import android.support.v4.app.NotificationCompat.{BigTextStyle, BigPictureStyle, WearableExtender}
 import android.support.v4.app.{NotificationCompat, NotificationManagerCompat, RemoteInput}
 import android.widget.Toast
 import ru.wordmetrix._
@@ -53,6 +53,8 @@ object PlayerService {
   case object PlayerServiceMessageRandom extends PlayerServiceMessage
 
   case class PlayerServiceMessagePhrase(id: Int) extends PlayerServiceMessage
+
+  case object PlayerServiceMessagePhraseOfTheDay extends PlayerServiceMessage
 
   case object PlayerServiceMessageDefault extends PlayerServiceMessage
 
@@ -462,7 +464,7 @@ class PlayerService extends Service with PlayerBase {
                     .setContentTitle(word.value)
                     .setContentText("phrase:")
                     .setStyle(
-                      new NotificationCompat.BigTextStyle().setBigContentTitle("phrase").bigText(phrase))
+                      new BigTextStyle().setBigContentTitle("phrase").bigText(phrase))
                     .build())
           }
 
@@ -580,16 +582,20 @@ class PlayerService extends Service with PlayerBase {
               pause()
 
             case PlayerServiceMessageViewNext if history_size > 0 =>
-              if (history_current > 0 && history_current < history_size - 1) {
-                history_current += 1
-              }
-
-              val word = new Word(history.get(history_current))
-              log(s"word = $word")
-              play(word)
-              notificationManager.notify(/*word.id | */ 0x40000, extendedWordNotification(word).build)
-
-              pause()
+              if (history_current > 0)
+                if (history_current < history_size - 1) {
+                  history_current += 1
+                  val word = new Word(history.get(history_current))
+                  log(s"word = $word")
+                  play(word)
+                  notificationManager.notify(/*word.id | */ 0x40000, extendedWordNotification(word).build)
+                  pause()
+                } else {
+                  notificationManager.cancel(0x40000)
+                  resume()
+                }
+              else
+                pause()
 
             case PlayerServiceMessageViewLast =>
               if (history_size > 0) {
@@ -603,7 +609,8 @@ class PlayerService extends Service with PlayerBase {
             case PlayerServiceMessageRandom =>
               notificationManager.cancel(0x40000)
               pause()
-              val word = new Word(history.get(Random.nextInt(history_size)))
+              history_current = Random.nextInt(history_size)
+              val word = new Word(history.get(history_current))
               log(s"word = $word")
               play(word)
               notificationManager.notify(/*word.id | */ 0x40000, extendedWordNotification(word).build)
@@ -615,7 +622,23 @@ class PlayerService extends Service with PlayerBase {
                 textToSpeach.speak(phrase.value, TextToSpeech.QUEUE_FLUSH, null)
                 log(s"word = $word, phrase=$phrase")
               }
+
+            case PlayerServiceMessagePhraseOfTheDay =>
+              Try(history.get(history_current)).toOption foreach {
+                case Word(word: Word) =>
+                  textToSpeach foreach { textToSpeach =>
+                    if (0 < word.phrases.length) {
+                      val phrase = word.phrases((System.currentTimeMillis() / (60 * 60 * 24 * 1000)) % word.phrases.length toInt)
+                      textToSpeach.speak(phrase.value, TextToSpeech.QUEUE_FLUSH, null)
+                      log(s"word = $word, phrase=$phrase")
+                    } else {
+                      textToSpeach.speak(s"There is no appropriate phrase for the word ${word.value}", TextToSpeech.QUEUE_FLUSH, null)
+                    }
+                  }
+              }
+              pause()
           }
+
         case _ if (stop) =>
           Toast.makeText(this, "Service has started", Toast.LENGTH_SHORT).show()
           servicehandler foreach { servicehandler =>

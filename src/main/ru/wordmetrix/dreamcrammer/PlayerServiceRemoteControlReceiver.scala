@@ -33,7 +33,7 @@ class PlayerServiceRemoteControlReceiver extends BroadcastReceiver {
         if (event.getAction == KeyEvent.ACTION_DOWN) event.getKeyCode match {
           case KeyEvent.KEYCODE_MEDIA_PLAY =>
             log(s"RemoteControlReceiver should play")
-            send(context, PlayerServiceMessageResume)
+            send(context, PlayerServiceMessagePhraseOfTheDay)
 
           case KeyEvent.KEYCODE_MEDIA_PAUSE =>
             log(s"RemoteControlReceiver should pause")
